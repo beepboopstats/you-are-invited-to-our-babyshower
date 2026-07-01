@@ -8,66 +8,92 @@ architecture each time. Read this before editing.
 
 ## What this project is
 
-A **single-file, no-build baby shower website** meant to be reused as a GitHub
-template. The entire site is `index.html`. There is no bundler, no framework,
-no package.json, and no dependencies beyond two Google Fonts loaded via `<link>`.
+A **no-build baby shower website** meant to be reused as a GitHub template. All
+user-editable content and theme live in **`config.js`**; `index.html` holds the
+markup and engine. There is no bundler, no framework, no package.json, and no
+dependencies beyond two Google Fonts loaded via `<link>`.
 
 The design goal is **modularity for non-technical users**: content and theme
 are fully separated from markup and logic, so a person who has never written
-code can customize the site by editing two clearly-marked blocks.
+code can customize the entire site by editing **one file, `config.js`**.
 
 ## Architecture in one screen
 
-`index.html` has four parts, top to bottom:
+Two files:
 
-1. **`<head>` + `<style>`** — a `:root` block of CSS custom properties (the
-   entire theme: palette, fonts, radius, spacing, hero background) followed by
-   component styles that consume only those variables.
-2. **`<body>` markup** — static skeleton with empty elements. Text nodes carry
-   a `data-bind="key"` attribute; lists (registry, gallery) are empty
-   containers filled at runtime.
-3. **`CONFIG` object** (bottom `<script>`) — the single source of content:
-   strings, dates, the `registries` array, the `photos` array, and RSVP fields.
-4. **ENGINE** (same script, IIFE below CONFIG) — reads CONFIG and populates the
-   DOM: fills `data-bind` nodes, computes the countdown, wires the RSVP button,
-   builds the registry grid, builds/hides the gallery, and generates the
-   `.ics` calendar file as an in-browser Blob.
+- **`config.js`** — the single source of everything editable. Defines one global
+  `window.CONFIG` object: content (strings, dates, `registries`, `photos`, RSVP
+  fields) plus a nested **`theme`** block (palette, fonts, radius/spacing, hero
+  image, hero background, and the hero text `heroPanel` fill).
 
-Data flows one way: **CONFIG → ENGINE → DOM**. Nothing writes back to CONFIG.
+- **`index.html`** — four parts, top to bottom:
+  1. **`<head>`** — loads `config.js` first, then the font `<link>`, then a
+     `<style>` block whose `:root` holds **theme *fallbacks*** (used only for the
+     split second before config applies, or if it fails to load), then a small
+     inline **theme-applier** script that maps `CONFIG.theme.*` onto the CSS
+     custom properties (`--bg`, `--accent`, `--hero-bg`, `--hero-panel`, …) on
+     `document.documentElement`. It runs in `<head>` so there's no flash.
+  2. **`<body>` markup** — static skeleton with empty elements. Text nodes carry
+     a `data-bind="key"` attribute; lists (registry, gallery) are empty
+     containers filled at runtime.
+  3. **ENGINE** (bottom `<script>`, an IIFE) — reads `window.CONFIG` and
+     populates the DOM: fills `data-bind` nodes, syncs `<title>`/meta, computes
+     the countdown, wires the RSVP button, builds the registry grid, builds/hides
+     the gallery, and generates the `.ics` calendar file as an in-browser Blob.
+
+Data flows one way: **config.js → theme-applier + ENGINE → DOM.** Nothing writes
+back to CONFIG.
+
+`config.js` is loaded with a plain `<script src>` tag (NOT `fetch`), which is
+why the site still works from `file://` (double-click) as well as over http.
 
 ## The golden rule
 
-**Content and theme changes go in CONFIG or `:root` — never in the markup or
-engine.** If a user asks to change wording, dates, links, colors, or fonts,
-edit only those two blocks. Touch markup/engine only when adding a genuinely
-new *type* of feature (a new section, a new interactive behavior).
+**Content and theme changes go in `config.js` — never in the markup or engine.**
+If a user asks to change wording, dates, links, colors, fonts, or the hero image,
+edit `config.js` only. The `:root` block in `index.html` is a fallback mirror;
+don't send users there to change the look. Touch markup/engine only when adding a
+genuinely new *type* of feature (a new section, a new interactive behavior).
 
 ## How to make common changes
 
-- **New content field (text):** add a key to CONFIG, add an element with a
-  matching `data-bind="key"` in the markup. The engine fills it automatically —
-  no engine edit needed.
+- **New content field (text):** add a key to `CONFIG` in `config.js`, add an
+  element with a matching `data-bind="key"` in the markup. The engine fills it
+  automatically — no engine edit needed.
 - **New registry item / photo:** these are data-driven. Add an object to the
-  `registries` or `photos` array in CONFIG. Do not touch markup or engine.
+  `registries` or `photos` array in `config.js`. Do not touch markup or engine.
 - **New button in the event section:** add markup inside `.event__actions`
   (reuse `.btn` + `.btn--solid` / `.btn--ghost`), add config fields, and add a
   small wiring block in the engine near the RSVP block (step "2b").
 - **New whole section:** add a `<section>` (wrap contents in `.wrap`), separate
   it with `<hr class="divider" />`, style with existing tokens, and drive any
-  dynamic content from CONFIG via `data-bind` or a new engine block.
-- **Theme / rebrand:** edit `:root` only. Palette is 6 named colors; the two
-  fonts are `--font-display` and `--font-body` (also update the `<head>` font
-  `<link>` if swapping the actual typefaces). Hero background is `--hero-bg`.
+  dynamic content from `config.js` via `data-bind` or a new engine block.
+- **New theme token:** add a key to `CONFIG.theme`, add a matching entry to the
+  `map` in the `<head>` theme-applier (e.g. `myToken: "--my-token"`), consume
+  `var(--my-token)` in the CSS, and add a `:root` fallback. The `heroImage` /
+  `heroBg` / `heroPanel` keys are handled specially in the applier (not via the
+  plain `map`) — follow that pattern for tokens that build a composite value or
+  toggle a class.
+- **Theme / rebrand:** edit `CONFIG.theme` in `config.js`. Palette is 6 named
+  colors; the two fonts are `fontDisplay` / `fontBody` (also update the `<head>`
+  font `<link>` if swapping the actual typefaces). Hero background is `heroImage`
+  (auto dark overlay) or `heroBg` (raw CSS override); `heroPanel` is a fill color
+  behind the hero text for legibility. Keep the `:root` fallbacks in `index.html`
+  in sync if you rename or add tokens.
 
 ## Conventions to preserve
 
-- **No build step.** Keep it a single static file that works when opened via
-  `file://` (double-click). Do not introduce a bundler, npm deps, or a
-  framework. Do not fetch external JSON at runtime — that breaks `file://`.
+- **No build step.** Keep it static files that work when `index.html` is opened
+  via `file://` (double-click). Do not introduce a bundler, npm deps, or a
+  framework. **Load config as a `<script src>` tag, never via `fetch`/`import`** —
+  `fetch` of a local file is blocked over `file://` and would break double-click
+  preview. This is why `config.js` assigns `window.CONFIG` rather than being a
+  JSON file or an ES module.
 - **No browser storage.** Do not use `localStorage` / `sessionStorage`.
 - **Colors and type come from variables.** Never hard-code a hex value in a
-  component rule; add or reuse a `--token`. (A few intentional exceptions exist,
-  e.g. the dark text-on-gold button color — match that pattern if extending.)
+  component rule; add or reuse a `--token` (and drive it from `CONFIG.theme`).
+  (A few intentional exceptions exist, e.g. the dark text-on-gold button color —
+  match that pattern if extending.)
 - **Accessibility floor:** every interactive element needs a visible
   `:focus-visible` outline; images need `alt`; the `prefers-reduced-motion`
   block must keep working. External links use `target="_blank"` +
@@ -82,12 +108,14 @@ new *type* of feature (a new section, a new interactive behavior).
 There is no test suite. Validate visually:
 
 1. Open `index.html` in a browser (or render headless with Playwright/Chromium)
-   and confirm all four sections display and the countdown shows a number.
+   and confirm all four sections display, the theme colors from `config.js`
+   applied (no flash of fallback colors), and the countdown shows a number.
 2. Click **Add to calendar** → an `.ics` downloads. Click **RSVP** → opens the
    configured link (or mail client for `mailto:`).
 3. Check a narrow viewport (~380px) — the layout should collapse to one column
    and the registry grid should reflow.
-4. Confirm no console errors.
+4. Confirm no console errors (a common one: `config.js` syntax error, which
+   leaves the page on fallbacks — run `node --check config.js`).
 
 ## Deployment
 
@@ -99,8 +127,9 @@ this workflow; the site is already static.
 ## Files
 
 ```
-index.html                    # the whole site: theme, markup, CONFIG, engine
-images/                       # user photos (referenced from CONFIG.photos)
+config.js                     # ALL editable content + theme (window.CONFIG)
+index.html                    # markup, :root fallbacks, theme-applier, engine
+images/                       # user photos (referenced from CONFIG.photos / theme)
 .github/workflows/deploy.yml  # Pages deploy (no build)
 README.md                     # end-user customization guide
 CLAUDE.md                     # this file

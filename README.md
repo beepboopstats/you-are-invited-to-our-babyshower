@@ -1,40 +1,45 @@
 # 🍼 One-Page Baby Shower Template
 
-A single-file, no-build website for a baby shower. Hosts the essentials —
-title, date, location, a live countdown, an **Add to calendar** button, and
-links to your registries — plus a customizable footer with photos.
+A no-build website for a baby shower. Hosts the essentials — title, date,
+location, a live countdown, an **Add to calendar** button, and links to your
+registries — plus a customizable footer with photos.
 
-Everything lives in one `index.html`. There is nothing to install, no build
-step, and no dependencies. Open the file in a browser and it works.
+Everything you edit lives in one file: **`config.js`**. The markup and logic
+sit in `index.html` and you never need to touch them. There is nothing to
+install, no build step, and no dependencies. Open `index.html` in a browser and
+it works.
 
 > **Use this template →** Click the green **Use this template** button at the
-> top of the repo to make your own copy, then edit the config (below) and turn
-> on GitHub Pages.
+> top of the repo to make your own copy, then edit `config.js` and turn on
+> GitHub Pages.
 
 ---
 
 ## Quick start
 
 1. **Use this template** to create your own repository.
-2. Open `index.html` and scroll to the **`CONFIG`** block near the bottom.
+2. Open **`config.js`**.
 3. Change the text, date, location, and registry links to yours.
-4. (Optional) Drop photos in an `images/` folder and list them in `CONFIG.photos`.
-5. (Optional) Change colors and fonts in the **`:root`** theme block near the top.
+4. (Optional) Drop photos in the `images/` folder and list them in `photos`.
+5. (Optional) Change colors, fonts, and the hero image in the **`theme`** block
+   at the bottom of `config.js`.
 6. Commit — GitHub Pages publishes automatically (see **Publishing** below).
 
-To preview locally, just double-click `index.html`. Because the whole site is
-self-contained, opening the file directly works fine — no server required.
+To preview locally, just double-click `index.html`. Because `config.js` is
+loaded with a plain `<script>` tag (not fetched), opening the file directly
+works fine — no server required.
 
 ---
 
 ## Customizing the content
 
-All content is in the `CONFIG` object at the bottom of `index.html`. You only
-edit values; the page rebuilds itself to match.
+All content is in the `CONFIG` object in `config.js`. You only edit values; the
+page rebuilds itself to match.
 
 | Field | What it controls |
 |---|---|
-| `title`, `subtitle`, `body` | The hero section text |
+| `title`, `description` | Browser tab / hero heading, and the link-preview text |
+| `subtitle`, `body` | The hero section text |
 | `eventStart`, `eventEnd` | Event time in `YYYY-MM-DDTHH:MM:SS` (24-hour, local). Drives the countdown and the calendar file. |
 | `dateDisplay` | How the date reads on the page (free text, e.g. `"Sep 4, 2026"`) |
 | `location` | Location shown on the page |
@@ -69,39 +74,56 @@ photos: [
 ],
 ```
 
-Put image files in an `images/` folder next to `index.html`, or use full URLs.
+Put image files in the `images/` folder next to `index.html`, or use full URLs.
 Leave the array empty (`photos: []`) and the gallery disappears automatically.
 
 ---
 
 ## Customizing the look
 
-The theme is a set of CSS variables in the `:root` block at the top of
-`index.html`. Change a value once and it updates everywhere.
+The theme is the `theme` block inside `config.js`. Change a value once and it
+updates everywhere — colors accept any CSS color (a hex like `"#e8b04b"` or an
+`"rgba(...)"`).
 
-```css
-:root {
-  --bg:      #1d2b2a;   /* page background   */
-  --ink:     #f3ede1;   /* main text         */
-  --accent:  #e8b04b;   /* highlights, ring  */
-  --accent-2:#7fb09b;   /* links             */
-  --font-display: "Fraunces", Georgia, serif;
-  --font-body:    "Nunito Sans", system-ui, sans-serif;
-  /* ...radius, spacing, and hero background live here too */
-}
+```js
+theme: {
+  bg:      "#1d2b2a",   // page background
+  ink:     "#f3ede1",   // main text
+  accent:  "#e8b04b",   // highlights, ring
+  accent2: "#7fb09b",   // links
+  fontDisplay: '"Fraunces", Georgia, serif',
+  fontBody:    '"Nunito Sans", system-ui, sans-serif',
+  // ...radius, spacing, hero image, and hero text panel live here too
+},
 ```
 
-**Hero background.** Set `--hero-bg` to a color, gradient, or image:
+**Hero background.** The simplest option is `heroImage` — a path or URL to a
+photo. A dark overlay is added automatically so the title stays readable:
 
-```css
---hero-bg: #24403c;                                  /* solid  */
---hero-bg: url("images/hero.jpg") center/cover;      /* photo  */
---hero-bg: radial-gradient(120% 120% at 20% 0%, #2c4d47, #1d2b2a); /* default */
+```js
+heroImage: "images/together.jpeg",   // photo with auto dark overlay
+heroImage: "",                        // no image — uses a solid/gradient bg
 ```
 
-**Fonts.** The two Google Fonts are loaded via the `<link>` in the `<head>`.
-To swap them, change that link and the `--font-display` / `--font-body`
-variables to match.
+For full control, set `heroBg` to any CSS background value (a gradient or solid
+color); it overrides `heroImage`:
+
+```js
+heroBg: "radial-gradient(120% 120% at 20% 0%, #2c4d47 0%, #1d2b2a 70%)",
+```
+
+**Hero text panel.** If the hero photo makes the title or body hard to read, set
+`heroPanel` to a semi-transparent color to place a fill box behind the text.
+Leave it `""` for no panel:
+
+```js
+heroPanel: "rgba(29,43,42,0.55)",   // 55%-opaque pine box behind hero text
+heroPanel: "",                       // text sits directly on the photo
+```
+
+**Fonts.** The two Google Fonts are loaded via the `<link>` in `index.html`'s
+`<head>`. To swap them, change that link and the `fontDisplay` / `fontBody`
+values to match.
 
 The layout is responsive by default and collapses to a single column on
 phones; the registry grid reflows to fit however many items you list.
@@ -133,8 +155,9 @@ Add a `CNAME` file containing your domain, and set the domain under
 
 ```
 .
-├── index.html                 ← the entire site (edit CONFIG + :root)
-├── images/                    ← your photos (create this yourself)
+├── config.js                  ← EDIT THIS: all content, colors, and images
+├── index.html                 ← markup + engine (you don't need to touch this)
+├── images/                    ← your photos
 ├── .github/workflows/deploy.yml
 ├── README.md
 ├── CLAUDE.md                  ← handoff guide for Claude Code / AI assistants

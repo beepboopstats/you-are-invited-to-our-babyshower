@@ -5,10 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <!-- ============================================================
-     PAGE METADATA  (edit these two lines to match your event)
+     CONTENT + THEME live in config.js — edit that file, not this one.
+     The <title> and description below are fallbacks; config.js
+     overrides them at load.
      ============================================================ -->
 <title>Baby Shower</title>
 <meta name="description" content="You're invited to our baby shower." />
+
+<script src="config.js"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,8 +20,10 @@
 
 <style>
   /* ============================================================
-     THEME  —  change the look here. Every color, font, radius and
-     spacing value the page uses is one of these variables.
+     THEME FALLBACKS — the real theme lives in config.js (the `theme`
+     block). These values are only used for the split second before
+     config.js applies, or if it fails to load. To change the look,
+     edit config.js, NOT the values here.
      ============================================================ */
   :root {
     /* Palette */
@@ -38,11 +44,12 @@
     --maxw:         680px;      /* content column width               */
     --gap:          clamp(1.75rem, 4vw, 3rem); /* space between sections */
 
-    /* Hero background — swap for a URL, gradient, or solid color.
-       Examples:
-         --hero-bg: url("images/hero.jpg") center/cover no-repeat;
-         --hero-bg: #24403c;                                          */
+    /* Hero background */
     --hero-bg: linear-gradient(rgba(29,43,42,0.55), rgba(29,43,42,0.82)), url("images/together.jpeg") center/cover no-repeat;
+
+    /* Fill color behind the hero text (for legibility over a busy photo).
+       transparent = no panel. Set theme.heroPanel in config.js to enable. */
+    --hero-panel: transparent;
   }
 
   /* ---------- base ---------- */
@@ -65,6 +72,8 @@
     margin-inline: auto;
     padding-inline: clamp(1.25rem, 5vw, 2.5rem);
   }
+  /* Full-bleed content column — lets the hero text use the whole width. */
+  .wrap--wide { max-width: none; }
 
   /* section rhythm */
   section { padding-block: var(--gap); }
@@ -75,6 +84,13 @@
     background: var(--hero-bg);
     text-align: center;
     padding-block: clamp(2.5rem, 7vw, 4.5rem);
+  }
+  /* Optional fill panel behind the hero text — only visible when
+     theme.heroPanel is set (the applier adds .hero-has-panel to <html>). */
+  .hero__panel { border-radius: var(--radius); }
+  .hero-has-panel .hero__panel {
+    background: var(--hero-panel);
+    padding: clamp(1.5rem, 5vw, 2.5rem);
   }
   .hero__title {
     font-family: var(--font-display);
@@ -95,7 +111,7 @@
   }
   .hero__body {
     color: var(--ink-soft);
-    max-width: 46ch;
+    max-width: none;
     margin: 1.5rem auto 0;
   }
 
@@ -219,18 +235,52 @@
     * { transition: none !important; scroll-behavior: auto !important; }
   }
 </style>
+
+<!-- Apply the theme from config.js as CSS variables. Runs in <head>,
+     before the body paints, so there is no flash of the fallback colors.
+     Maps each theme key to its CSS custom property. -->
+<script>
+(function () {
+  var t = (window.CONFIG && window.CONFIG.theme) || {};
+  var root = document.documentElement;
+  var map = {
+    bg: "--bg", bg2: "--bg-2", ink: "--ink", inkSoft: "--ink-soft",
+    accent: "--accent", accent2: "--accent-2", line: "--line",
+    fontDisplay: "--font-display", fontBody: "--font-body",
+    radius: "--radius", maxWidth: "--maxw", gap: "--gap",
+  };
+  Object.keys(map).forEach(function (key) {
+    if (t[key] != null && t[key] !== "") root.style.setProperty(map[key], t[key]);
+  });
+  // Hero background: explicit heroBg wins; otherwise build a dark-overlay
+  // image from heroImage. If neither is set, the :root fallback stands.
+  var hero = t.heroBg;
+  if ((!hero || hero === "") && t.heroImage) {
+    hero = 'linear-gradient(rgba(29,43,42,0.55), rgba(29,43,42,0.82)), url("' +
+           t.heroImage + '") center/cover no-repeat';
+  }
+  if (hero) root.style.setProperty("--hero-bg", hero);
+
+  // Optional fill panel behind the hero text (for legibility over a photo).
+  if (t.heroPanel != null && t.heroPanel !== "") {
+    root.style.setProperty("--hero-panel", t.heroPanel);
+    root.classList.add("hero-has-panel");
+  }
+})();
+</script>
 </head>
 
 <body>
-  <!-- The page renders itself from the CONFIG object at the bottom of
-       this file. In normal use you never touch the markup below —
-       edit CONFIG and the theme variables above only. -->
+  <!-- The page renders itself from the CONFIG object in config.js.
+       In normal use you never touch the markup below — edit config.js only. -->
 
   <header class="hero">
-    <div class="wrap">
-      <h1 class="hero__title" data-bind="title"></h1>
-      <p class="hero__subtitle" data-bind="subtitle"></p>
-      <p class="hero__body" data-bind="body"></p>
+    <div class="wrap wrap--wide">
+      <div class="hero__panel">
+        <h1 class="hero__title" data-bind="title"></h1>
+        <p class="hero__subtitle" data-bind="subtitle"></p>
+        <p class="hero__body" data-bind="body"></p>
+      </div>
     </div>
   </header>
 
@@ -246,6 +296,7 @@
       </div>
       <div class="event__details">
         <p class="event__date" data-bind="dateDisplay"></p>
+        <p class="event__date" id="event-time"></p>
         <p class="event__location" data-bind="location"></p>
         <div class="event__actions">
           <a class="btn btn--solid" id="calendar-btn" href="#" download>
@@ -284,70 +335,24 @@
 
 <script>
 /* ================================================================
-   CONFIG — this is the only part most people need to edit.
-   Change the text, dates, and links. Add or remove registry items
-   and photos freely; the page rebuilds itself to match.
-   ================================================================ */
-const CONFIG = {
-  /* --- Hero --- */
-  title:      "Title Goes Here",
-  subtitle:   "A subtitle for the celebration",
-  body:       "General text body here — a warm sentence or two inviting your guests, sharing what to expect, or anything else you'd like them to know.",
-
-  /* --- Event --- */
-  // Event start in ISO format: "YYYY-MM-DDTHH:MM:SS" (24-hour, local time).
-  eventStart:  "2026-09-04T14:00:00",
-  eventEnd:    "2026-09-04T17:00:00",   // used for the calendar file
-  dateDisplay: "Sep 4, 2026",           // how the date reads on the page
-  location:    "Flagstaff, AZ",
-  // Address used inside the downloadable calendar event (optional):
-  calendarLocation: "Flagstaff, AZ",
-  calendarTitle:    "Baby Shower",
-  calendarDetails:  "Join us to celebrate!",
-
-  /* --- RSVP --- */
-  // The RSVP button link. Use a full web URL (Google Form, Partiful, etc.)
-  //   rsvpUrl: "https://forms.gle/your-form",
-  // or an email link, which opens the guest's mail app pre-addressed:
-  //   rsvpUrl: "mailto:you@example.com?subject=Baby%20Shower%20RSVP",
-  // Set rsvpUrl to "" (empty) to hide the RSVP button entirely.
-  rsvpUrl:   "mailto:you@example.com?subject=Baby%20Shower%20RSVP",
-  rsvpLabel: "RSVP",
-
-  /* --- Registry --- */
-  registryHeading: "Baby Registry",
-  registrySub:     "Your presence is the gift — but if you'd like to bring something, here's where we're registered.",
-  registries: [
-    { name: "Amazon",    note: "Everyday essentials", url: "https://www.amazon.com/baby-reg/" },
-    { name: "Target",    note: "Nursery & gear",      url: "https://www.target.com/gift-registry/" },
-    { name: "IKEA",      note: "Furniture picks",     url: "https://www.ikea.com/" },
-    { name: "Cash Fund", note: "Toward the big stuff", url: "https://www.example.com/cash-fund" },
-  ],
-
-  /* --- Footer --- */
-  footerHeading:  "With love",
-  // Photos: drop images in an /images folder and reference them, or use URLs.
-  // Leave the array empty ([]) to hide the gallery entirely.
-  photos: [
-    // { src: "images/photo1.jpg", alt: "Us at the beach" },
-    // { src: "images/photo2.jpg", alt: "The nursery" },
-  ],
-  footerNote:     "Can't wait to celebrate with you. Please RSVP by August 20th.",
-  footerSignoff:  "— The Parents-to-be",
-};
-
-/* ================================================================
    ENGINE — you shouldn't need to edit below this line.
+   Reads the CONFIG object defined in config.js and builds the page.
    ================================================================ */
 (function () {
+  const CONFIG = window.CONFIG || {};
+
   // 1. Fill every element that has a data-bind attribute.
   document.querySelectorAll("[data-bind]").forEach((el) => {
     const key = el.getAttribute("data-bind");
     if (CONFIG[key] != null && CONFIG[key] !== "") el.textContent = CONFIG[key];
   });
 
-  // Also sync page <title> / meta with the config title.
+  // Also sync page <title> / meta description with the config values.
   if (CONFIG.title) document.title = CONFIG.title;
+  if (CONFIG.description) {
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute("content", CONFIG.description);
+  }
 
   // 2. Countdown.
   const numEl = document.getElementById("countdown-num");
@@ -367,6 +372,15 @@ const CONFIG = {
     else if (days === 1) { numEl.textContent = "1"; labelEl.textContent = "day to go"; }
     else if (days === 0) { numEl.textContent = "🎉"; labelEl.textContent = "it's today"; }
     else                 { numEl.textContent = "♡";  labelEl.textContent = "thank you"; }
+  }
+
+  // 2a. Event start time — derived from eventStart, shown below the date
+  //     in a human-readable form like "2:00 pm".
+  const timeEl = document.getElementById("event-time");
+  if (timeEl && !isNaN(start)) {
+    timeEl.textContent = start
+      .toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })
+      .toLowerCase();
   }
 
   // 2b. RSVP button.
