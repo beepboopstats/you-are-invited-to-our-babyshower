@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- ============================================================
+     PAGE METADATA  (edit these two lines to match your event)
+     ============================================================ -->
+<title>Baby Shower</title>
+<meta name="description" content="You're invited to our baby shower." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+
+<style>
+  /* ============================================================
+     THEME  —  change the look here. Every color, font, radius and
+     spacing value the page uses is one of these variables.
+     ============================================================ */
+  :root {
+    /* Palette */
+    --bg:            #1d2b2a;   /* deep pine — page background        */
+    --bg-2:         #24403c;   /* card / panel background            */
+    --ink:          #f3ede1;   /* primary text (warm cream)          */
+    --ink-soft:     #c3c9be;   /* secondary text                     */
+    --accent:       #e8b04b;   /* honey gold — highlights, ring      */
+    --accent-2:     #7fb09b;   /* sage — links, secondary accent     */
+    --line:         rgba(243,237,225,0.16); /* hairline dividers      */
+
+    /* Type */
+    --font-display: "Fraunces", Georgia, serif;
+    --font-body:    "Nunito Sans", system-ui, sans-serif;
+
+    /* Shape & rhythm */
+    --radius:       14px;
+    --maxw:         680px;      /* content column width               */
+    --gap:          clamp(1.75rem, 4vw, 3rem); /* space between sections */
+
+    /* Hero background — swap for a URL, gradient, or solid color.
+       Examples:
+         --hero-bg: url("images/hero.jpg") center/cover no-repeat;
+         --hero-bg: #24403c;                                          */
+    --hero-bg: radial-gradient(120% 120% at 20% 0%, #2c4d47 0%, var(--bg) 70%);
+  }
+
+  /* ---------- base ---------- */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: var(--accent-2); }
+
+  .wrap {
+    max-width: var(--maxw);
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 5vw, 2.5rem);
+  }
+
+  /* section rhythm */
+  section { padding-block: var(--gap); }
+  .divider { height: 1px; background: var(--line); border: 0; margin: 0; }
+
+  /* ---------- hero ---------- */
+  .hero {
+    background: var(--hero-bg);
+    text-align: center;
+    padding-block: clamp(2.5rem, 7vw, 4.5rem);
+  }
+  .hero__title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-size: clamp(2.75rem, 8vw, 5rem);
+    line-height: 0.98;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .hero__subtitle {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+    font-size: clamp(1.35rem, 4vw, 2rem);
+    margin: 0.75rem 0 0;
+  }
+  .hero__body {
+    color: var(--ink-soft);
+    max-width: 46ch;
+    margin: 1.5rem auto 0;
+  }
+
+  /* ---------- event bar ---------- */
+  .event {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: clamp(1.5rem, 5vw, 3rem);
+  }
+
+  /* countdown ring */
+  .countdown {
+    --size: 148px;
+    flex: 0 0 auto;
+    width: var(--size); height: var(--size);
+    display: grid; place-items: center;
+    border-radius: 50%;
+    position: relative;
+    background: var(--bg-2);
+    box-shadow: inset 0 0 0 3px var(--accent);
+  }
+  .countdown::after {
+    content: ""; position: absolute; inset: -9px;
+    border-radius: 50%;
+    border: 1px dashed var(--accent);
+    opacity: 0.4;
+  }
+  .countdown__num {
+    font-family: var(--font-display);
+    font-size: 3.1rem; font-weight: 500; line-height: 1;
+  }
+  .countdown__label {
+    text-transform: uppercase; letter-spacing: 0.18em;
+    font-size: 0.7rem; color: var(--ink-soft); margin-top: 0.15rem;
+  }
+
+  .event__details { display: grid; gap: 0.35rem; justify-items: center; }
+  .event__date {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+    line-height: 1.05; margin: 0;
+  }
+  .event__location { color: var(--ink-soft); margin: 0 0 0.9rem; font-size: 1.05rem; }
+  .event__actions {
+    display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center;
+  }
+
+  /* buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-body); font-weight: 700;
+    font-size: 0.95rem; letter-spacing: 0.01em;
+    text-decoration: none; cursor: pointer;
+    padding: 0.7rem 1.15rem;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .btn--solid { background: var(--accent); color: #241a06; }
+  .btn--solid:hover { background: #f0bd63; }
+  .btn--ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn--ghost:hover { border-color: var(--accent); }
+
+  /* ---------- registry ---------- */
+  .section-head {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+    text-align: center; margin: 0 0 0.4rem;
+  }
+  .section-sub {
+    text-align: center; color: var(--ink-soft);
+    margin: 0 auto 2rem; max-width: 40ch;
+  }
+  .registry {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 0.9rem;
+  }
+  .registry__item {
+    display: flex; flex-direction: column; gap: 0.15rem;
+    text-decoration: none; color: var(--ink);
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .registry__item:hover { transform: translateY(-3px); border-color: var(--accent-2); }
+  .registry__item:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .registry__name { font-family: var(--font-display); font-size: 1.35rem; }
+  .registry__note { color: var(--ink-soft); font-size: 0.9rem; }
+  .registry__arrow { margin-top: 0.35rem; color: var(--accent-2); font-weight: 700; font-size: 0.9rem; }
+
+  /* ---------- footer ---------- */
+  .footer { text-align: center; }
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin: 1.75rem 0;
+  }
+  .gallery img {
+    width: 100%; aspect-ratio: 1/1; object-fit: cover;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+  }
+  .footer__note { color: var(--ink-soft); }
+  .footer__sign {
+    font-family: var(--font-display); font-style: italic;
+    color: var(--accent); font-size: 1.4rem; margin-top: 0.5rem;
+  }
+  .credit { color: var(--ink-soft); font-size: 0.78rem; opacity: 0.6; padding-bottom: 2rem; text-align: center; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+
+<body>
+  <!-- The page renders itself from the CONFIG object at the bottom of
+       this file. In normal use you never touch the markup below —
+       edit CONFIG and the theme variables above only. -->
+
+  <header class="hero">
+    <div class="wrap">
+      <h1 class="hero__title" data-bind="title"></h1>
+      <p class="hero__subtitle" data-bind="subtitle"></p>
+      <p class="hero__body" data-bind="body"></p>
+    </div>
+  </header>
+
+  <hr class="divider" />
+
+  <section aria-label="Event details">
+    <div class="wrap event">
+      <div class="countdown" role="img" aria-label="Days remaining until the shower">
+        <div>
+          <div class="countdown__num" id="countdown-num">—</div>
+          <div class="countdown__label" id="countdown-label">days to go</div>
+        </div>
+      </div>
+      <div class="event__details">
+        <p class="event__date" data-bind="dateDisplay"></p>
+        <p class="event__location" data-bind="location"></p>
+        <div class="event__actions">
+          <a class="btn btn--solid" id="calendar-btn" href="#" download>
+            <span aria-hidden="true">📅</span> Add to calendar
+          </a>
+          <a class="btn btn--solid" id="rsvp-btn" target="_blank" rel="noopener noreferrer">
+            <span aria-hidden="true">✉️</span> <span id="rsvp-label">RSVP</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <section aria-label="Baby registry">
+    <div class="wrap">
+      <h2 class="section-head" data-bind="registryHeading"></h2>
+      <p class="section-sub" data-bind="registrySub"></p>
+      <div class="registry" id="registry-grid"></div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <footer class="footer">
+    <div class="wrap">
+      <h2 class="section-head" data-bind="footerHeading"></h2>
+      <div class="gallery" id="gallery"></div>
+      <p class="footer__note" data-bind="footerNote"></p>
+      <p class="footer__sign" data-bind="footerSignoff"></p>
+    </div>
+  </footer>
+
+  <p class="credit">Made with the one-page baby shower template.</p>
+
+<script>
+/* ================================================================
+   CONFIG — this is the only part most people need to edit.
+   Change the text, dates, and links. Add or remove registry items
+   and photos freely; the page rebuilds itself to match.
+   ================================================================ */
+const CONFIG = {
+  /* --- Hero --- */
+  title:      "Title Goes Here",
+  subtitle:   "A subtitle for the celebration",
+  body:       "General text body here — a warm sentence or two inviting your guests, sharing what to expect, or anything else you'd like them to know.",
+
+  /* --- Event --- */
+  // Event start in ISO format: "YYYY-MM-DDTHH:MM:SS" (24-hour, local time).
+  eventStart:  "2026-09-04T14:00:00",
+  eventEnd:    "2026-09-04T17:00:00",   // used for the calendar file
+  dateDisplay: "Sep 4, 2026",           // how the date reads on the page
+  location:    "Flagstaff, AZ",
+  // Address used inside the downloadable calendar event (optional):
+  calendarLocation: "Flagstaff, AZ",
+  calendarTitle:    "Baby Shower",
+  calendarDetails:  "Join us to celebrate!",
+
+  /* --- RSVP --- */
+  // The RSVP button link. Use a full web URL (Google Form, Partiful, etc.)
+  //   rsvpUrl: "https://forms.gle/your-form",
+  // or an email link, which opens the guest's mail app pre-addressed:
+  //   rsvpUrl: "mailto:you@example.com?subject=Baby%20Shower%20RSVP",
+  // Set rsvpUrl to "" (empty) to hide the RSVP button entirely.
+  rsvpUrl:   "mailto:you@example.com?subject=Baby%20Shower%20RSVP",
+  rsvpLabel: "RSVP",
+
+  /* --- Registry --- */
+  registryHeading: "Baby Registry",
+  registrySub:     "Your presence is the gift — but if you'd like to bring something, here's where we're registered.",
+  registries: [
+    { name: "Amazon",    note: "Everyday essentials", url: "https://www.amazon.com/baby-reg/" },
+    { name: "Target",    note: "Nursery & gear",      url: "https://www.target.com/gift-registry/" },
+    { name: "IKEA",      note: "Furniture picks",     url: "https://www.ikea.com/" },
+    { name: "Cash Fund", note: "Toward the big stuff", url: "https://www.example.com/cash-fund" },
+  ],
+
+  /* --- Footer --- */
+  footerHeading:  "With love",
+  // Photos: drop images in an /images folder and reference them, or use URLs.
+  // Leave the array empty ([]) to hide the gallery entirely.
+  photos: [
+    // { src: "images/photo1.jpg", alt: "Us at the beach" },
+    // { src: "images/photo2.jpg", alt: "The nursery" },
+  ],
+  footerNote:     "Can't wait to celebrate with you. Please RSVP by August 20th.",
+  footerSignoff:  "— The Parents-to-be",
+};
+
+/* ================================================================
+   ENGINE — you shouldn't need to edit below this line.
+   ================================================================ */
+(function () {
+  // 1. Fill every element that has a data-bind attribute.
+  document.querySelectorAll("[data-bind]").forEach((el) => {
+    const key = el.getAttribute("data-bind");
+    if (CONFIG[key] != null && CONFIG[key] !== "") el.textContent = CONFIG[key];
+  });
+
+  // Also sync page <title> / meta with the config title.
+  if (CONFIG.title) document.title = CONFIG.title;
+
+  // 2. Countdown.
+  const numEl = document.getElementById("countdown-num");
+  const labelEl = document.getElementById("countdown-label");
+  const start = new Date(CONFIG.eventStart);
+  if (!isNaN(start)) {
+    const today = new Date();
+    const msPerDay = 86400000;
+    const days = Math.ceil((start - today) / msPerDay);
+    if (days > 1)      { numEl.textContent = days;  labelEl.textContent = "days to go"; }
+    else if (days === 1) { numEl.textContent = "1"; labelEl.textContent = "day to go"; }
+    else if (days === 0) { numEl.textContent = "🎉"; labelEl.textContent = "it's today"; }
+    else                 { numEl.textContent = "♡";  labelEl.textContent = "thank you"; }
+  }
+
+  // 2b. RSVP button.
+  const rsvpBtn = document.getElementById("rsvp-btn");
+  if (CONFIG.rsvpUrl && CONFIG.rsvpUrl.trim() !== "") {
+    rsvpBtn.href = CONFIG.rsvpUrl;
+    document.getElementById("rsvp-label").textContent = CONFIG.rsvpLabel || "RSVP";
+    // mailto links must open in the same tab, not a new one.
+    if (CONFIG.rsvpUrl.startsWith("mailto:")) rsvpBtn.removeAttribute("target");
+  } else {
+    rsvpBtn.remove();
+  }
+
+  // 3. Registry grid.
+  const grid = document.getElementById("registry-grid");
+  (CONFIG.registries || []).forEach((r) => {
+    const a = document.createElement("a");
+    a.className = "registry__item";
+    a.href = r.url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.innerHTML =
+      `<span class="registry__name"></span>` +
+      `<span class="registry__note"></span>` +
+      `<span class="registry__arrow">Open ↗</span>`;
+    a.querySelector(".registry__name").textContent = r.name;
+    a.querySelector(".registry__note").textContent = r.note || "";
+    grid.appendChild(a);
+  });
+
+  // 4. Gallery.
+  const gallery = document.getElementById("gallery");
+  const photos = CONFIG.photos || [];
+  if (photos.length === 0) {
+    gallery.remove();
+  } else {
+    photos.forEach((p) => {
+      const img = document.createElement("img");
+      img.src = p.src;
+      img.alt = p.alt || "";
+      img.loading = "lazy";
+      gallery.appendChild(img);
+    });
+  }
+
+  // 5. "Add to calendar" — builds a downloadable .ics file on the fly.
+  const toICS = (d) => new Date(d).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const esc = (s) => String(s || "").replace(/([,;\\])/g, "\\$1").replace(/\n/g, "\\n");
+  const ics = [
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//baby-shower-template//EN",
+    "BEGIN:VEVENT",
+    "UID:" + Date.now() + "@baby-shower",
+    "DTSTAMP:" + toICS(new Date()),
+    "DTSTART:" + toICS(CONFIG.eventStart),
+    "DTEND:" + toICS(CONFIG.eventEnd || CONFIG.eventStart),
+    "SUMMARY:" + esc(CONFIG.calendarTitle),
+    "LOCATION:" + esc(CONFIG.calendarLocation),
+    "DESCRIPTION:" + esc(CONFIG.calendarDetails),
+    "END:VEVENT", "END:VCALENDAR",
+  ].join("\r\n");
+  const blob = new Blob([ics], { type: "text/calendar" });
+  const btn = document.getElementById("calendar-btn");
+  btn.href = URL.createObjectURL(blob);
+  btn.setAttribute("download", (CONFIG.calendarTitle || "event").replace(/\s+/g, "-").toLowerCase() + ".ics");
+})();
+</script>
+</body>
+</html>

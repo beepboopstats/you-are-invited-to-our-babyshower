@@ -1,0 +1,45 @@
+name: Deploy to GitHub Pages
+
+# Publishes the site whenever you push to the main branch.
+# No build step — this template is plain HTML, so we just upload the repo as-is.
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:   # lets you trigger a deploy manually from the Actions tab
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; newer pushes cancel in-progress runs.
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    # Skip in the template repo itself; run only in repos generated from it.
+    # (Creating a repo from a template does not trigger this workflow — it
+    #  first runs on the new owner's push to main.)
+    if: github.repository != 'beepboopstats/baby-shower-template'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "."   # upload the whole repo (index.html + images/)
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
