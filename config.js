@@ -11,22 +11,23 @@
    ================================================================ */
 window.CONFIG = {
   /* --- Page metadata --- */
-  title:       "Come to our 👶🏼🚿",     // browser tab + hero heading
+  title:       "Baby Shower",     // browser tab + hero heading
   description: "Alicia & Billu invites you to our baby shower.",  // search / link preview
 
   /* --- Hero --- */
-  subtitle:   "Baby Alphonso wants to meet you.",
+  subtitle:   "Join Alicia & Billu to celebrate a new beginning",
   body:       "General text body here — a warm sentence or two inviting your guests, sharing what to expect, or anything else you'd like them to know.",
 
   /* --- Event --- */
-  // Event start in ISO format: "YYYY-MM-DDTHH:MM:SS" (24-hour, local time).
-  // The countdown is computed from this in each visitor's own timezone.
-  eventStart:  "2026-09-04T14:00:00",
-  eventEnd:    "2026-09-04T17:00:00",   // used for the calendar file
-  dateDisplay: "Sep 4, 2026",           // how the date reads on the page
+  eventDate:   "2026-09-05",   // date of the event, "YYYY-MM-DD" (shown as "Sep 5, 2026")
+  eventStart:  "14:00",        // start time, 24-hour "HH:MM" (shown as "2:00 pm")
+  eventEnd:    "17:00",        // end time, 24-hour "HH:MM" (for the calendar file)
+  // Shown on the page and used for the calendar event. The calendar file's
+  // timezone is deduced from the US state at the end of this address
+  // (e.g. "…, AZ" → America/Phoenix). If no US state is recognized, the time
+  // is left "floating" (shown as-is in the guest's own calendar).
   location:    "2013 N Center St, Flagstaff, AZ",
-  // Address used inside the downloadable calendar event (optional):
-  calendarLocation: "2013 N Center St, Flagstaff, AZ",
+  // Calendar event name + notes. calendarTitle falls back to `title` if blank.
   calendarTitle:    "Alicia & Billu's Baby Shower",
   calendarDetails:  "Join us to celebrate!",
 

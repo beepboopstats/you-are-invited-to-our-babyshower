@@ -40,10 +40,10 @@ page rebuilds itself to match.
 |---|---|
 | `title`, `description` | Browser tab / hero heading, and the link-preview text |
 | `subtitle`, `body` | The hero section text |
-| `eventStart`, `eventEnd` | Event time in `YYYY-MM-DDTHH:MM:SS` (24-hour, local). Drives the countdown and the calendar file. |
-| `dateDisplay` | How the date reads on the page (free text, e.g. `"Sep 4, 2026"`) |
-| `location` | Location shown on the page |
-| `calendarTitle`, `calendarLocation`, `calendarDetails` | What goes inside the downloadable calendar event |
+| `eventDate` | Event date, `"YYYY-MM-DD"`. Drives the countdown, the calendar file, and the date shown on the page (formatted like `Sep 5, 2026`). |
+| `eventStart`, `eventEnd` | Start / end time, 24-hour `"HH:MM"`. The start time is also shown on the page (formatted like `2:00 pm`). |
+| `location` | The address — shown on the page **and** used for the calendar event. The event's timezone is deduced from the US state at the end of it (e.g. `…, AZ` → Arizona time); unrecognized locations use a floating local time. |
+| `calendarTitle`, `calendarDetails` | Name and notes for the downloadable calendar event. `calendarTitle` falls back to `title` if left blank. |
 | `rsvpUrl`, `rsvpLabel` | The RSVP button. Use a form URL (Google Forms, Partiful, etc.) or a `mailto:` link. Set `rsvpUrl: ""` to hide the button. |
 | `registryHeading`, `registrySub` | Registry section heading + intro line |
 | `registries` | The registry buttons — see below |

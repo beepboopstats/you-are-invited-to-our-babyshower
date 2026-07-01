@@ -295,7 +295,7 @@
         </div>
       </div>
       <div class="event__details">
-        <p class="event__date" data-bind="dateDisplay"></p>
+        <p class="event__date" id="event-date"></p>
         <p class="event__date" id="event-time"></p>
         <p class="event__location" data-bind="location"></p>
         <div class="event__actions">
@@ -357,7 +357,10 @@
   // 2. Countdown.
   const numEl = document.getElementById("countdown-num");
   const labelEl = document.getElementById("countdown-label");
-  const start = new Date(CONFIG.eventStart);
+  // Combine the date + start time into a local Date. eventDate is
+  // "YYYY-MM-DD" and eventStart is 24-hour "HH:MM"; with no timezone suffix
+  // this parses in the viewer's local zone (fine for the day count below).
+  const start = new Date((CONFIG.eventDate || "") + "T" + (CONFIG.eventStart || "00:00"));
   if (!isNaN(start)) {
     // Count whole calendar days between "today" and the event in the
     // viewer's own timezone. eventStart has no timezone suffix, so it is
@@ -374,13 +377,21 @@
     else                 { numEl.textContent = "♡";  labelEl.textContent = "thank you"; }
   }
 
-  // 2a. Event start time — derived from eventStart, shown below the date
-  //     in a human-readable form like "2:00 pm".
-  const timeEl = document.getElementById("event-time");
-  if (timeEl && !isNaN(start)) {
-    timeEl.textContent = start
-      .toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })
-      .toLowerCase();
+  // 2a. Event date + start time — both derived from eventDate/eventStart and
+  //     shown on their own lines, e.g. "Sep 5, 2026" then "2:00 pm".
+  if (!isNaN(start)) {
+    const dateEl = document.getElementById("event-date");
+    if (dateEl) {
+      dateEl.textContent = start.toLocaleDateString(undefined, {
+        year: "numeric", month: "short", day: "numeric",
+      });
+    }
+    const timeEl = document.getElementById("event-time");
+    if (timeEl) {
+      timeEl.textContent = start
+        .toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })
+        .toLowerCase();
+    }
   }
 
   // 2b. RSVP button.
@@ -427,24 +438,65 @@
   }
 
   // 5. "Add to calendar" — builds a downloadable .ics file on the fly.
-  const toICS = (d) => new Date(d).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const esc = (s) => String(s || "").replace(/([,;\\])/g, "\\$1").replace(/\n/g, "\\n");
+  // UTC stamp (with trailing Z) for DTSTAMP.
+  const toUTC = (d) => new Date(d).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  // Local date + time → the ical "YYYYMMDDTHHMMSS" form (no timezone suffix).
+  const pad = (n, len = 2) => String(n == null ? "" : n).padStart(len, "0");
+  const icsLocal = (dateStr, timeStr) => {
+    const [y, mo, da] = (dateStr || "").split("-");
+    const [h, mi] = (timeStr || "00:00").split(":");
+    return pad(y, 4) + pad(mo) + pad(da) + "T" + pad(h) + pad(mi) + "00";
+  };
+
+  // Deduce the event's timezone from the US state code at the end of the
+  // address (e.g. "…, Flagstaff, AZ" → "America/Phoenix"). Multi-zone states
+  // use their most populous zone. Unknown/foreign → floating local time.
+  const US_TZ = {
+    AL:"America/Chicago", AK:"America/Anchorage", AZ:"America/Phoenix",
+    AR:"America/Chicago", CA:"America/Los_Angeles", CO:"America/Denver",
+    CT:"America/New_York", DE:"America/New_York", DC:"America/New_York",
+    FL:"America/New_York", GA:"America/New_York", HI:"Pacific/Honolulu",
+    ID:"America/Boise", IL:"America/Chicago", IN:"America/Indiana/Indianapolis",
+    IA:"America/Chicago", KS:"America/Chicago", KY:"America/New_York",
+    LA:"America/Chicago", ME:"America/New_York", MD:"America/New_York",
+    MA:"America/New_York", MI:"America/Detroit", MN:"America/Chicago",
+    MS:"America/Chicago", MO:"America/Chicago", MT:"America/Denver",
+    NE:"America/Chicago", NV:"America/Los_Angeles", NH:"America/New_York",
+    NJ:"America/New_York", NM:"America/Denver", NY:"America/New_York",
+    NC:"America/New_York", ND:"America/Chicago", OH:"America/New_York",
+    OK:"America/Chicago", OR:"America/Los_Angeles", PA:"America/New_York",
+    RI:"America/New_York", SC:"America/New_York", SD:"America/Chicago",
+    TN:"America/Chicago", TX:"America/Chicago", UT:"America/Denver",
+    VT:"America/New_York", VA:"America/New_York", WA:"America/Los_Angeles",
+    WV:"America/New_York", WI:"America/Chicago", WY:"America/Denver",
+  };
+  const addr = (CONFIG.location || "").trim();
+  const stateMatch = addr.match(/\b([A-Za-z]{2})\b\s*(?:\d{5}(?:-\d{4})?)?\s*$/);
+  const tzid = stateMatch ? US_TZ[stateMatch[1].toUpperCase()] : null;
+  // With a known TZID, anchor the time to that zone; otherwise leave it
+  // floating so it shows as the given wall-clock time in the guest's calendar.
+  const dtParam = tzid ? ";TZID=" + tzid : "";
+  const dtStart = icsLocal(CONFIG.eventDate, CONFIG.eventStart);
+  const dtEnd = icsLocal(CONFIG.eventDate, CONFIG.eventEnd || CONFIG.eventStart);
+  const calTitle = CONFIG.calendarTitle || CONFIG.title || "event";
+
   const ics = [
     "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//baby-shower-template//EN",
     "BEGIN:VEVENT",
     "UID:" + Date.now() + "@baby-shower",
-    "DTSTAMP:" + toICS(new Date()),
-    "DTSTART:" + toICS(CONFIG.eventStart),
-    "DTEND:" + toICS(CONFIG.eventEnd || CONFIG.eventStart),
-    "SUMMARY:" + esc(CONFIG.calendarTitle),
-    "LOCATION:" + esc(CONFIG.calendarLocation),
+    "DTSTAMP:" + toUTC(new Date()),
+    "DTSTART" + dtParam + ":" + dtStart,
+    "DTEND" + dtParam + ":" + dtEnd,
+    "SUMMARY:" + esc(calTitle),
+    "LOCATION:" + esc(CONFIG.location),
     "DESCRIPTION:" + esc(CONFIG.calendarDetails),
     "END:VEVENT", "END:VCALENDAR",
   ].join("\r\n");
   const blob = new Blob([ics], { type: "text/calendar" });
   const btn = document.getElementById("calendar-btn");
   btn.href = URL.createObjectURL(blob);
-  btn.setAttribute("download", (CONFIG.calendarTitle || "event").replace(/\s+/g, "-").toLowerCase() + ".ics");
+  btn.setAttribute("download", calTitle.replace(/\s+/g, "-").toLowerCase() + ".ics");
 })();
 </script>
 </body>
