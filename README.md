@@ -77,6 +77,36 @@ photos: [
 Put image files in the `images/` folder next to `index.html`, or use full URLs.
 Leave the array empty (`photos: []`) and the gallery disappears automatically.
 
+### Sharing & SEO
+
+The `meta` block in `config.js` controls the browser-tab icon and how the link
+looks when shared:
+
+```js
+meta: {
+  siteUrl:       "https://www.beepboopstats.com/you-are-invited-to-our-babyshower/",
+  shareImage:    "images/together.jpeg",   // preview thumbnail (ideal ~1200×630)
+  shareImageAlt: "Alicia & Billu, parents-to-be",
+  favicon:       "🍼",                       // tab icon (any single emoji)
+},
+```
+
+The page title and description for previews come from the `title` and
+`description` fields above — you don't repeat them here.
+
+**Privacy — the page is _unlisted_ by default.** `index.html` ships with
+`<meta name="robots" content="noindex, nofollow">`, so search engines won't list
+it (sensible, since it shows names and an address). Link previews when you share
+the URL still work regardless. To make it publicly searchable, change that tag to
+`index, follow`.
+
+> **Heads-up on link previews.** These preview tags are added by JavaScript, and
+> the scrapers behind **Facebook / iMessage / WhatsApp / Slack / X** don't run
+> JavaScript — so rich previews won't show there (Google/Bing, which do render
+> JS, will see them). If you need previews to work in chat apps, move the
+> `og:*` / `twitter:*` / `canonical` tags into `index.html`'s `<head>` as plain
+> static tags with your real values. See `CLAUDE.md` for details.
+
 ---
 
 ## Customizing the look

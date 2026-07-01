@@ -27,19 +27,24 @@ Two files:
   image, hero background, and the hero text `heroPanel` fill).
 
 - **`index.html`** — four parts, top to bottom:
-  1. **`<head>`** — loads `config.js` first, then the font `<link>`, then a
+  1. **`<head>`** — loads `config.js` first; then a static `<title>` +
+     `description` (fallbacks), a **static `robots: noindex, nofollow`** tag, and
+     a static emoji **favicon**; then a **metadata injector** script that builds
+     `<title>`, description, canonical, Open Graph, and Twitter Card tags from
+     `CONFIG.title`/`description`/`meta`; then the font `<link>`; then a
      `<style>` block whose `:root` holds **theme *fallbacks*** (used only for the
-     split second before config applies, or if it fails to load), then a small
+     split second before config applies, or if it fails to load); then a small
      inline **theme-applier** script that maps `CONFIG.theme.*` onto the CSS
      custom properties (`--bg`, `--accent`, `--hero-bg`, `--hero-panel`, …) on
-     `document.documentElement`. It runs in `<head>` so there's no flash.
+     `document.documentElement`. The head scripts run before the body paints.
   2. **`<body>` markup** — static skeleton with empty elements. Text nodes carry
      a `data-bind="key"` attribute; lists (registry, gallery) are empty
      containers filled at runtime.
   3. **ENGINE** (bottom `<script>`, an IIFE) — reads `window.CONFIG` and
-     populates the DOM: fills `data-bind` nodes, syncs `<title>`/meta, computes
-     the countdown, wires the RSVP button, builds the registry grid, builds/hides
-     the gallery, and generates the `.ics` calendar file as an in-browser Blob.
+     populates the DOM: fills `data-bind` nodes, computes the countdown, wires
+     the RSVP button, builds the registry grid, builds/hides the gallery, and
+     generates the `.ics` calendar file as an in-browser Blob. (It no longer
+     touches `<title>`/meta — the head injector owns those.)
 
 Data flows one way: **config.js → theme-applier + ENGINE → DOM.** Nothing writes
 back to CONFIG.
@@ -80,6 +85,15 @@ genuinely new *type* of feature (a new section, a new interactive behavior).
   (auto dark overlay) or `heroBg` (raw CSS override); `heroPanel` is a fill color
   behind the hero text for legibility. Keep the `:root` fallbacks in `index.html`
   in sync if you rename or add tokens.
+- **Sharing / SEO metadata:** lives in `CONFIG.meta` (`siteUrl`, `shareImage`,
+  `shareImageAlt`, `favicon`); og/twitter title+description reuse `CONFIG.title` /
+  `CONFIG.description`. The head **metadata injector** turns these into tags at
+  runtime. **Caveat:** non-rendering social scrapers (Facebook, iMessage, Slack,
+  WhatsApp, X) don't run JS, so injected `og:*`/`twitter:*` tags won't appear in
+  their previews (Google/Bing render JS and will). To make chat previews work,
+  promote those tags to **static** tags in `<head>` with literal values. The
+  `robots noindex` tag and the favicon are intentionally **static** already (see
+  Conventions) — do not move them into the injector alone.
 
 ## Conventions to preserve
 
@@ -102,6 +116,11 @@ genuinely new *type* of feature (a new section, a new interactive behavior).
   RSVP logic). Preserve this when adding data-driven pieces.
 - **CSS specificity:** styles are single-class selectors by design. Keep it that
   way to avoid the section/element specificity clashes on padding and margins.
+- **Privacy floor stays static.** The `robots: noindex, nofollow` tag is
+  hardcoded in `<head>`, not JS-injected — the page shows names + a home address
+  and must not be indexed even if the engine fails to run. Keep it static (and
+  static-first) if you touch metadata. Don't add trackers or collect personal
+  data (RSVP is a link out).
 
 ## Verifying changes
 
@@ -116,6 +135,9 @@ There is no test suite. Validate visually:
    and the registry grid should reflow.
 4. Confirm no console errors (a common one: `config.js` syntax error, which
    leaves the page on fallbacks — run `node --check config.js`).
+5. Metadata: in DevTools **Elements → `<head>`**, confirm the injector added
+   `link[rel=canonical]`, `og:*`, `twitter:*`, and the emoji favicon, and that
+   **View-source** shows the static `robots noindex` + favicon without JS.
 
 ## Deployment
 

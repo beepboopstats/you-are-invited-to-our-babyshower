@@ -14,6 +14,21 @@ window.CONFIG = {
   title:       "Baby Shower",     // browser tab + hero heading
   description: "Alicia & Billu invites you to our baby shower.",  // search / link preview
 
+  /* --- Sharing / SEO ---
+     Note: link previews on social/chat apps (Facebook, iMessage, WhatsApp,
+     Slack, X) do NOT run JavaScript, so these injected tags won't show there.
+     Search engines that render JS (Google, Bing) will. See README. */
+  meta: {
+    // Canonical/base URL where the site is actually hosted. Used for the
+    // canonical link, the social share URL, and to make the share image absolute.
+    siteUrl: "https://www.beepboopstats.com/you-are-invited-to-our-babyshower/",
+    // Image shown in social link previews (path or full URL; ideal ~1200x630).
+    shareImage: "images/together.jpeg",
+    shareImageAlt: "Alicia & Billu, parents-to-be",
+    // Tab icon — a single emoji (rendered as an inline SVG favicon).
+    favicon: "🍼",
+  },
+
   /* --- Hero --- */
   subtitle:   "Join Alicia & Billu to celebrate a new beginning",
   body:       "General text body here — a warm sentence or two inviting your guests, sharing what to expect, or anything else you'd like them to know.",

@@ -12,7 +12,59 @@
 <title>Baby Shower</title>
 <meta name="description" content="You're invited to our baby shower." />
 
+<!-- Kept static (not config-driven) on purpose: the noindex tag is the privacy
+     safeguard for the address and must not depend on JS running; the favicon
+     shows the tab icon instantly. The injector below can override the favicon. -->
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍼</text></svg>" />
+
 <script src="config.js"></script>
+
+<!-- Build SEO / social-share metadata from config.js (title, description,
+     canonical, Open Graph, Twitter Card, favicon). Runs in <head> so a
+     JS-rendering crawler sees the tags in its snapshot. Note: non-rendering
+     social scrapers won't run this — see config.js `meta`. -->
+<script>
+(function () {
+  var C = window.CONFIG || {}, M = C.meta || {}, d = document, head = d.head;
+  var abs = function (u) { try { return new URL(u, M.siteUrl || d.baseURI).href; } catch (e) { return u; } };
+  function tag(sel, make) {
+    var el = head.querySelector(sel);
+    if (!el) { el = make(); head.appendChild(el); }
+    return el;
+  }
+  function meta(key, attr, val) {
+    if (val == null || val === "") return;
+    tag("meta[" + attr + '="' + key + '"]', function () {
+      var m = d.createElement("meta"); m.setAttribute(attr, key); return m;
+    }).setAttribute("content", val);
+  }
+  // Title + description (single source; the bottom engine no longer sets these).
+  if (C.title) d.title = C.title;
+  meta("description", "name", C.description);
+  // Canonical + Open Graph + Twitter Card.
+  var url = M.siteUrl, img = M.shareImage ? abs(M.shareImage) : "";
+  if (url) tag('link[rel="canonical"]', function () {
+    var l = d.createElement("link"); l.rel = "canonical"; return l;
+  }).setAttribute("href", url);
+  meta("og:type", "property", "website");
+  meta("og:title", "property", C.title);
+  meta("og:description", "property", C.description);
+  meta("og:url", "property", url);
+  meta("og:image", "property", img);
+  meta("og:image:alt", "property", M.shareImageAlt);
+  meta("twitter:card", "name", "summary_large_image");
+  meta("twitter:title", "name", C.title);
+  meta("twitter:description", "name", C.description);
+  meta("twitter:image", "name", img);
+  // Favicon override (optional) — mirrors the static fallback above.
+  if (M.favicon) {
+    tag('link[rel="icon"]', function () { var l = d.createElement("link"); l.rel = "icon"; return l; })
+      .setAttribute("href", "data:image/svg+xml," + encodeURIComponent(
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>" + M.favicon + "</text></svg>"));
+  }
+})();
+</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -347,12 +399,8 @@
     if (CONFIG[key] != null && CONFIG[key] !== "") el.textContent = CONFIG[key];
   });
 
-  // Also sync page <title> / meta description with the config values.
-  if (CONFIG.title) document.title = CONFIG.title;
-  if (CONFIG.description) {
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", CONFIG.description);
-  }
+  // (Page <title>, description, and social/SEO tags are set by the metadata
+  //  injector in <head>, so the engine no longer touches them here.)
 
   // 2. Countdown.
   const numEl = document.getElementById("countdown-num");
