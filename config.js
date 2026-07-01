@@ -11,8 +11,8 @@
    ================================================================ */
 window.CONFIG = {
   /* --- Page metadata --- */
-  title:       "Baby Shower",     // browser tab + hero heading
-  description: "Alicia & Billu invites you to our baby shower.",  // search / link preview
+  title:       "Alicia & Billu's Baby Shower",     // browser tab + hero heading
+  description: "You are invited to our baby shower.",  // search / link preview
 
   /* --- Sharing / SEO ---
      Note: link previews on social/chat apps (Facebook, iMessage, WhatsApp,
@@ -26,11 +26,11 @@ window.CONFIG = {
     shareImage: "images/together.jpeg",
     shareImageAlt: "Alicia & Billu, parents-to-be",
     // Tab icon — a single emoji (rendered as an inline SVG favicon).
-    favicon: "🍼",
+    favicon: "🐣",
   },
 
   /* --- Hero --- */
-  subtitle:   "Join Alicia & Billu to celebrate a new beginning",
+  subtitle:   "Join us to celebrate a new beginning",
   body:       "General text body here — a warm sentence or two inviting your guests, sharing what to expect, or anything else you'd like them to know.",
 
   /* --- Event --- */
