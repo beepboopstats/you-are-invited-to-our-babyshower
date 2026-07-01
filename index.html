@@ -354,9 +354,15 @@ const CONFIG = {
   const labelEl = document.getElementById("countdown-label");
   const start = new Date(CONFIG.eventStart);
   if (!isNaN(start)) {
-    const today = new Date();
+    // Count whole calendar days between "today" and the event in the
+    // viewer's own timezone. eventStart has no timezone suffix, so it is
+    // parsed as local time; normalizing both ends to local midnight makes
+    // the result depend only on the date, not the time of day.
+    const now = new Date();
+    const startMidnight = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const msPerDay = 86400000;
-    const days = Math.ceil((start - today) / msPerDay);
+    const days = Math.round((startMidnight - todayMidnight) / msPerDay);
     if (days > 1)      { numEl.textContent = days;  labelEl.textContent = "days to go"; }
     else if (days === 1) { numEl.textContent = "1"; labelEl.textContent = "day to go"; }
     else if (days === 0) { numEl.textContent = "🎉"; labelEl.textContent = "it's today"; }
