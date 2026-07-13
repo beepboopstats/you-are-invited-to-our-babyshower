@@ -30,8 +30,8 @@ window.CONFIG = {
   },
 
   /* --- Hero --- */
-  subtitle:   "Join us to celebrate a new beginning",
-  body:       "General text body here — a warm sentence or two inviting your guests, sharing what to expect, or anything else you'd like them to know.",
+  subtitle:   "Before we head off to California, join us for an afternoon of fun in our backyard! There will be games and food; come celebrate our baby boy!",
+  body:       "",
 
   /* --- Event --- */
   eventDate:   "2026-09-05",   // date of the event, "YYYY-MM-DD" (shown as "Sep 5, 2026")
@@ -58,19 +58,19 @@ window.CONFIG = {
 
   /* --- Registry --- */
   registryHeading: "Baby Registry",
-  registrySub:     "Your presence is the gift — but if you'd like to bring something, here are some registries with items we think we will most need.",
+  registrySub:     "Your presence is enough, but if you would like to contribute, check out our registries, which will send gifts to Phoenix to help with the move. You have the option to purchase items, contribute towards items, or donate cash.",
   registries: [
     { name: "Amazon",    
     	note: "Everyday essentials", 
-    	url: "https://www.amazon.com/baby-reg/" 
+    	url: "https://www.amazon.com/baby-reg/alicia-formanack-december-2026-phoenix/1LS4PA2AUZK2S?ref_=cm_sw_r_cp_ud_dp_9R1YJJD4413WSZ9QSEZB" 
     	},
     { name: "Target",    
     	note: "Nursery & gear",      
-    	url: "https://www.target.com/gift-registry/" 
+    	url: "https://www.target.com/gift-registry/gift/alicia-and-billu" 
     	},
     { name: "IKEA",      
     	note: "Furniture picks",     
-    	url: "https://www.ikea.com/" 
+    	url: "https://www.myregistry.com/baby-registry/biplabendu-das-and-alicia-formanack-phoenix-az/5505930" 
     	},
     { name: "Cash Fund", 
     	note: "Toward the big stuff", 
