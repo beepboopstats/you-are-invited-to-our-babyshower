@@ -232,6 +232,37 @@
   .btn--ghost { background: transparent; color: var(--ink); border-color: var(--line); }
   .btn--ghost:hover { border-color: var(--accent); }
 
+  /* ---------- RSVP modal ---------- */
+  .rsvp-dialog {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-2);
+    color: var(--ink);
+    padding: 1.6rem;
+    width: min(24rem, calc(100vw - 2rem));
+    box-shadow: 0 18px 50px rgba(0,0,0,0.45);
+  }
+  .rsvp-dialog::backdrop { background: rgba(0,0,0,0.55); }
+  .rsvp-dialog__title {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: 1.8rem; margin: 0 0 1rem; text-align: center;
+  }
+  .rsvp-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
+  .rsvp-field > span { font-weight: 700; font-size: 0.9rem; }
+  .rsvp-field input {
+    font-family: var(--font-body); font-size: 1rem; color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.65rem 0.8rem;
+  }
+  .rsvp-field input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .rsvp-form__msg { min-height: 1.2rem; margin: 0 0 0.75rem; font-size: 0.9rem; color: var(--ink-soft); }
+  .rsvp-form__msg[data-state="error"] { color: #f0a9a0; }
+  .rsvp-form__msg[data-state="ok"] { color: var(--accent-2); }
+  .rsvp-form__actions { display: flex; justify-content: flex-end; gap: 0.6rem; }
+  .rsvp-form__actions .btn[disabled] { opacity: 0.6; cursor: default; transform: none; }
+
   /* ---------- registry ---------- */
   .section-head {
     font-family: var(--font-display);
@@ -265,17 +296,41 @@
 
   /* ---------- footer ---------- */
   .footer { text-align: center; }
-  .gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 0.75rem;
+  .slideshow {
+    position: relative;
     margin: 1.75rem 0;
   }
-  .gallery img {
-    width: 100%; aspect-ratio: 1/1; object-fit: cover;
+  .slideshow__track {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
     border-radius: var(--radius);
     border: 1px solid var(--line);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* swipe/arrows are the controls; hide the bar */
   }
+  .slideshow__track::-webkit-scrollbar { display: none; }
+  .slideshow__track:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .slideshow__track img {
+    flex: 0 0 100%;
+    width: 100%; aspect-ratio: 4/3; object-fit: cover;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  .slideshow__arrow {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 2.5rem; height: 2.5rem;
+    border: 1px solid var(--line); border-radius: 50%;
+    background: var(--bg2);
+    color: var(--ink); font-size: 1.4rem; line-height: 1;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .slideshow__arrow:hover { border-color: var(--accent-2); }
+  .slideshow__arrow:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .slideshow__arrow--prev { left: 0.6rem; }
+  .slideshow__arrow--next { right: 0.6rem; }
   .footer__note { color: var(--ink-soft); }
   .footer__sign {
     font-family: var(--font-display); font-style: italic;
@@ -360,6 +415,28 @@
         </div>
       </div>
     </div>
+
+    <!-- RSVP form modal (shown only when CONFIG.rsvpEndpoint is set). -->
+    <dialog id="rsvp-dialog" class="rsvp-dialog" aria-labelledby="rsvp-dialog-title">
+      <form id="rsvp-form" class="rsvp-form">
+        <h2 class="rsvp-dialog__title" id="rsvp-dialog-title">RSVP</h2>
+        <label class="rsvp-field">
+          <span>Your name</span>
+          <input id="rsvp-name" name="name" type="text" autocomplete="name"
+                 maxlength="80" required />
+        </label>
+        <label class="rsvp-field">
+          <span>Number attending</span>
+          <input id="rsvp-count" name="count" type="number" inputmode="numeric"
+                 min="1" max="20" step="1" value="1" required />
+        </label>
+        <p class="rsvp-form__msg" id="rsvp-msg" role="status" aria-live="polite"></p>
+        <div class="rsvp-form__actions">
+          <button type="button" class="btn btn--ghost" id="rsvp-cancel">Cancel</button>
+          <button type="submit" class="btn btn--solid" id="rsvp-submit">Confirm RSVP</button>
+        </div>
+      </form>
+    </dialog>
   </section>
 
   <hr class="divider" />
@@ -377,7 +454,11 @@
   <footer class="footer">
     <div class="wrap">
       <h2 class="section-head" data-bind="footerHeading"></h2>
-      <div class="gallery" id="gallery"></div>
+      <div class="slideshow" id="slideshow" aria-label="Photo slideshow" aria-roledescription="carousel">
+        <div class="slideshow__track" id="slideshow-track" tabindex="0"></div>
+        <button class="slideshow__arrow slideshow__arrow--prev" id="slideshow-prev" type="button" aria-label="Previous photo">&#8249;</button>
+        <button class="slideshow__arrow slideshow__arrow--next" id="slideshow-next" type="button" aria-label="Next photo">&#8250;</button>
+      </div>
       <p class="footer__note" data-bind="footerNote"></p>
       <p class="footer__sign" data-bind="footerSignoff"></p>
     </div>
@@ -442,14 +523,98 @@
     }
   }
 
-  // 2b. RSVP button.
+  // 2b. RSVP button. Three modes, in priority order:
+  //   (A) rsvpEndpoint set  -> button opens the on-page form; submissions POST
+  //       to the Apps Script Web App, which appends a row to a Google Sheet.
+  //   (B) rsvpUrl set       -> button is a plain link (web URL or mailto:).
+  //   (C) neither set       -> button is removed.
   const rsvpBtn = document.getElementById("rsvp-btn");
-  if (CONFIG.rsvpUrl && CONFIG.rsvpUrl.trim() !== "") {
-    rsvpBtn.href = CONFIG.rsvpUrl;
+  const rsvpEndpoint = (CONFIG.rsvpEndpoint || "").trim();
+  const rsvpUrl = (CONFIG.rsvpUrl || "").trim();
+  if (rsvpEndpoint || rsvpUrl) {
     document.getElementById("rsvp-label").textContent = CONFIG.rsvpLabel || "RSVP";
+  }
+
+  if (rsvpEndpoint) {
+    // Mode A — open the form modal.
+    const dialog = document.getElementById("rsvp-dialog");
+    const form = document.getElementById("rsvp-form");
+    const msg = document.getElementById("rsvp-msg");
+    const submit = document.getElementById("rsvp-submit");
+    const cancel = document.getElementById("rsvp-cancel");
+    const setMsg = (text, state) => {
+      msg.textContent = text || "";
+      if (state) msg.setAttribute("data-state", state);
+      else msg.removeAttribute("data-state");
+    };
+
+    // The button is an <a>; without an href it drops out of the tab order,
+    // so restore keyboard access with role=button + tabindex + key handling.
+    rsvpBtn.removeAttribute("href");
+    rsvpBtn.removeAttribute("target");
+    rsvpBtn.setAttribute("role", "button");
+    rsvpBtn.setAttribute("tabindex", "0");
+    const openDialog = () => {
+      setMsg("");
+      // <dialog> gives us focus-trapping, Esc-to-close, and a backdrop for free.
+      if (typeof dialog.showModal === "function") dialog.showModal();
+      else dialog.setAttribute("open", "");
+    };
+    rsvpBtn.addEventListener("click", (e) => { e.preventDefault(); openDialog(); });
+    rsvpBtn.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDialog(); }
+    });
+    cancel.addEventListener("click", () => dialog.close());
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = {
+        name: form.elements.name.value.trim(),
+        count: form.elements.count.value,
+      };
+      if (!payload.name) { setMsg("Please enter your name.", "error"); return; }
+
+      submit.disabled = true;
+      cancel.disabled = true;
+      setMsg("Sending…");
+      try {
+        // Body is a plain string, so the browser sends Content-Type
+        // text/plain — a "simple" request that skips the CORS preflight
+        // Apps Script can't answer. mode:"no-cors" is used because Apps
+        // Script redirects the POST to a URL without CORS headers, which
+        // would make a successful write reject in the default "cors" mode.
+        // The response is therefore opaque (we can't read it), so only
+        // genuine network failures land in catch. The script reads
+        // e.postData.contents to get this JSON.
+        await fetch(rsvpEndpoint, {
+          method: "POST",
+          mode: "no-cors",
+          body: JSON.stringify(payload),
+        });
+        setMsg(CONFIG.rsvpSuccess || "Thank you! Your RSVP is in.", "ok");
+        form.reset();
+        submit.textContent = "Done";
+        setTimeout(() => dialog.close(), 1400);
+      } catch (err) {
+        setMsg("Sorry — that didn't go through. Please try again.", "error");
+        submit.disabled = false;
+        cancel.disabled = false;
+      }
+    });
+
+    // Reset the form's UI each time the dialog closes.
+    dialog.addEventListener("close", () => {
+      submit.disabled = false;
+      cancel.disabled = false;
+      submit.textContent = "Confirm RSVP";
+    });
+  } else if (rsvpUrl) {
+    // Mode B — plain link.
+    rsvpBtn.href = rsvpUrl;
     // mailto links must open in the same tab, not a new one.
-    if (CONFIG.rsvpUrl.startsWith("mailto:")) rsvpBtn.removeAttribute("target");
+    if (rsvpUrl.startsWith("mailto:")) rsvpBtn.removeAttribute("target");
   } else {
+    // Mode C — nothing configured.
     rsvpBtn.remove();
   }
 
@@ -470,19 +635,69 @@
     grid.appendChild(a);
   });
 
-  // 4. Gallery.
-  const gallery = document.getElementById("gallery");
-  const photos = CONFIG.photos || [];
-  if (photos.length === 0) {
-    gallery.remove();
-  } else {
-    photos.forEach((p) => {
-      const img = document.createElement("img");
-      img.src = p.src;
-      img.alt = p.alt || "";
-      img.loading = "lazy";
-      gallery.appendChild(img);
+  // 4. Photo slideshow — one swipeable frame (scroll-snap does the swiping).
+  // CONFIG.photos is either { folder: "..." } — the engine probes for
+  // 01.*, 02.*, 03.*, … (jpeg/jpg/png/webp) and stops at the first gap —
+  // or the legacy array of { src, alt } objects, which still works.
+  const slideshow = document.getElementById("slideshow");
+  const track = document.getElementById("slideshow-track");
+  const slidePrev = document.getElementById("slideshow-prev");
+  const slideNext = document.getElementById("slideshow-next");
+
+  const addSlide = (src, alt) => {
+    const img = document.createElement("img");
+    img.src = src;
+    img.alt = alt;
+    track.appendChild(img);
+  };
+
+  // Called once all slides exist: removes the empty slideshow, or wires
+  // the arrows/keyboard. Scrolls use the track's CSS scroll-behavior, so
+  // the prefers-reduced-motion override still disables the animation.
+  const finishSlideshow = (count) => {
+    if (count === 0) { slideshow.remove(); return; }
+    if (count === 1) { slidePrev.remove(); slideNext.remove(); return; }
+    const step = (dir) => {
+      const w = track.clientWidth;
+      const max = track.scrollWidth - w;
+      let x = Math.round(track.scrollLeft / w + dir) * w;
+      if (x < 0) x = max;            // wrap around at either end
+      else if (x > max + 1) x = 0;
+      track.scrollTo({ left: x });
+    };
+    slidePrev.addEventListener("click", () => step(-1));
+    slideNext.addEventListener("click", () => step(1));
+    track.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); step(1); }
     });
+  };
+
+  const photosCfg = CONFIG.photos;
+  if (Array.isArray(photosCfg)) {
+    photosCfg.forEach((p) => addSlide(p.src, p.alt || ""));
+    finishSlideshow(photosCfg.length);
+  } else if (photosCfg && photosCfg.folder) {
+    const folder = photosCfg.folder.replace(/\/?$/, "/");
+    const EXTS = ["jpeg", "jpg", "png", "webp"];
+    // Resolves to the URL of photo #n (trying each extension) or null.
+    // Uses an Image load as the existence test because fetch() is blocked
+    // over file:// — this also pre-warms the browser cache for the slide.
+    const probe = (n, e = 0) => new Promise((resolve) => {
+      if (e >= EXTS.length) return resolve(null);
+      const url = folder + String(n).padStart(2, "0") + "." + EXTS[e];
+      const img = new Image();
+      img.onload = () => resolve(url);
+      img.onerror = () => probe(n, e + 1).then(resolve);
+      img.src = url;
+    });
+    (async () => {
+      let n = 1;
+      for (let src; (src = await probe(n)); n++) addSlide(src, "Photo " + n);
+      finishSlideshow(n - 1);
+    })();
+  } else {
+    slideshow.remove();
   }
 
   // 5. "Add to calendar" — builds a downloadable .ics file on the fly.

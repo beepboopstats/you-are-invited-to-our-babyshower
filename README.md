@@ -44,7 +44,8 @@ page rebuilds itself to match.
 | `eventStart`, `eventEnd` | Start / end time, 24-hour `"HH:MM"`. The start time is also shown on the page (formatted like `2:00 pm`). |
 | `location` | The address — shown on the page **and** used for the calendar event. The event's timezone is deduced from the US state at the end of it (e.g. `…, AZ` → Arizona time); unrecognized locations use a floating local time. |
 | `calendarTitle`, `calendarDetails` | Name and notes for the downloadable calendar event. `calendarTitle` falls back to `title` if left blank. |
-| `rsvpUrl`, `rsvpLabel` | The RSVP button. Use a form URL (Google Forms, Partiful, etc.) or a `mailto:` link. Set `rsvpUrl: ""` to hide the button. |
+| `rsvpEndpoint` | Optional. A Google Apps Script URL that turns the RSVP button into an on-page form (name + number attending) writing to a Google Sheet you own. See **Collecting RSVPs** below. When set, it takes priority over `rsvpUrl`. |
+| `rsvpUrl`, `rsvpLabel`, `rsvpSuccess` | The RSVP button. If `rsvpEndpoint` is empty, `rsvpUrl` is used as a plain link — a form URL (Google Forms, Partiful, etc.) or a `mailto:` link. `rsvpLabel` is the button text; `rsvpSuccess` is the thank-you shown after the form is submitted. Set **both** `rsvpEndpoint` and `rsvpUrl` to `""` to hide the button. |
 | `registryHeading`, `registrySub` | Registry section heading + intro line |
 | `registries` | The registry buttons — see below |
 | `footerHeading`, `footerNote`, `footerSignoff` | Footer text |
@@ -64,6 +65,57 @@ registries: [
 - `name` — the big label
 - `note` — a short line underneath (optional; use `""` to skip)
 - `url` — where the button links
+
+### Cash fund page (Venmo / Zelle / PayPal…)
+
+The template includes a built-in **Cash Fund** page at `cash_fund/index.html`
+(the `Cash Fund` registry button opens it). It shows one card per payment app —
+your handle with a **Copy** button, an optional link button, and an optional QR
+code — and it automatically matches the site's theme.
+
+Everything on it is edited in one file, **`cash_fund_config.js`** (next to
+`config.js`):
+
+```js
+methods: [
+  {
+    name:   "Venmo",                                // the app
+    icon:   "💸",                                   // emoji next to the name
+    handle: "@your-venmo-username",                 // shown with a Copy button
+    url:    "https://venmo.com/u/your-venmo-username", // adds an "Open" button
+    qr:     "venmo-qr.png",                         // QR image in cash_fund/
+    note:   "Add a 🍼 in the payment note!",
+  },
+  // ...add Zelle, PayPal, Cash App, etc. the same way
+],
+```
+
+Every field except `name` is optional — leave any as `""` and the card adjusts
+(Zelle, for example, has a `handle` but no `url`). **QR codes:** save the QR
+image from your payment app, drop the file into the `cash_fund/` folder, and
+put its file name in `qr`.
+
+Don't want the page? Just point the `Cash Fund` registry button somewhere else
+(or remove it) in `config.js`.
+
+### Collecting RSVPs (name + headcount → Google Sheet)
+
+By default the RSVP button is just a link. If you'd rather collect RSVPs
+**on the page** — a small form asking for a name and number attending — and
+have each one land as a row in a Google Sheet you own, do this once:
+
+1. Open **`rsvp-apps-script.gs`** in this repo and follow the setup steps at
+   the top (create a Sheet → Extensions → Apps Script → paste → Deploy as a
+   Web app). It takes about 3 minutes and needs no coding.
+2. Copy the Web app URL it gives you and paste it into `config.js`:
+   ```js
+   rsvpEndpoint: "https://script.google.com/macros/s/AKfy.../exec",
+   ```
+3. Save and reload. The RSVP button now opens the form; submissions append
+   `Timestamp | Name | Number attending` rows to your sheet.
+
+No server, no database, no build step — the site stays static and the data
+lives in your own Google Sheet (tally the guest count with `=SUM(C2:C)`).
 
 ### Photos
 
@@ -187,6 +239,8 @@ Add a `CNAME` file containing your domain, and set the domain under
 .
 ├── config.js                  ← EDIT THIS: all content, colors, and images
 ├── index.html                 ← markup + engine (you don't need to touch this)
+├── cash_fund_config.js        ← EDIT THIS: Venmo / Zelle / PayPal details
+├── cash_fund/                 ← the cash fund page + your QR code images
 ├── images/                    ← your photos
 ├── .github/workflows/deploy.yml
 ├── README.md

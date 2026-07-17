@@ -46,15 +46,27 @@ window.CONFIG = {
   calendarTitle:    "Alicia & Billu's Baby Shower",
   calendarDetails:  "Join us to celebrate!",
 
-  /* --- RSVP --- */
-  // The RSVP button link. Use a full web URL (Google Form, Partiful, etc.)
-  //   rsvpUrl: "https://forms.gle/your-form",
-  // or an email link, which opens the guest's mail app pre-addressed:
-  //   rsvpUrl: "mailto:you@example.com?subject=Baby%20Shower%20RSVP",
-  // Set rsvpUrl to "" (empty) to hide the RSVP button entirely.
-  rsvpUrl:   
+  /* --- RSVP ---
+     Two ways to run RSVP. Pick ONE:
+
+     A) On-page form → Google Sheet (recommended).
+        The RSVP button opens a small form (name + number attending) and
+        writes a row to a Google Sheet you own. Paste your Apps Script
+        Web App URL below. Setup takes ~3 min — see rsvp-apps-script.gs
+        and the README for step-by-step instructions.
+        When rsvpEndpoint is set, it takes priority over rsvpUrl.
+
+     B) Link out (the classic way).
+        Leave rsvpEndpoint "" (empty) and put a full web URL (Google Form,
+        Partiful, etc.) or a mailto: link in rsvpUrl. The button just opens it.
+
+     Set BOTH rsvpEndpoint and rsvpUrl to "" to hide the RSVP button. */
+  rsvpEndpoint: "https://script.google.com/macros/s/AKfycbzyxxm2Jczrq_q7QpmsIZ8IFop-CORW-D2WX5Pqt-pkdELeg92hXSFMEbURxRRAq7y8/exec",   // e.g. "https://script.google.com/macros/s/AKfy.../exec"
+  rsvpUrl:
   	"mailto:beepboopstats@gmail.com?subject=RSVP:%20Alicia-Billu%20Baby%20Shower",
   rsvpLabel: "RSVP",
+  // Message shown after a guest submits the on-page form (option A only).
+  rsvpSuccess: "Thank you! Your RSVP is in. 🎉",
 
   /* --- Registry --- */
   registryHeading: "Baby Registry",
@@ -72,19 +84,20 @@ window.CONFIG = {
     	note: "Furniture picks",     
     	url: "https://www.myregistry.com/baby-registry/biplabendu-das-and-alicia-formanack-phoenix-az/5505930" 
     	},
-    { name: "Cash Fund", 
-    	note: "Toward the big stuff", 
-    	url: "https://www.example.com/cash-fund" },
+    { name: "Cash Fund",
+    	note: "Toward the big stuff",
+    	// Opens the built-in cash fund page — edit cash_fund_config.js
+    	// to set your Venmo / Zelle / PayPal details.
+    	url: "cash_fund/index.html" },
   ],
 
   /* --- Footer --- */
   footerHeading:  "With love",
-  // Photos: drop images in the /images folder and reference them, or use URLs.
-  // Leave the array empty ([]) to hide the gallery entirely.
-  photos: [
-    { src: "images/together.jpeg", alt: "Us at the beach" },
-    { src: "images/together.jpeg", alt: "The nursery" },
-  ],
+  // Photos: drop numbered images (01.jpeg, 02.jpeg, 03.jpeg, …) into the
+  // folder below and they appear automatically in the slideshow — no list to
+  // maintain. Numbering must start at 01 with no gaps (jpeg/jpg/png/webp all
+  // work). Set folder to "" to hide the slideshow entirely.
+  photos: { folder: "images/slideshow/" },
   footerNote:     "Can't wait to celebrate with you. Please RSVP by August 20th.",
   footerSignoff:  "— The Parents-to-be",
 
@@ -116,7 +129,7 @@ window.CONFIG = {
     /* Hero background image (a path in /images, or a full URL). A dark
        overlay is added automatically so the title stays readable.
        Leave "" (empty) to use a solid color background instead. */
-    heroImage: "images/together.jpeg",
+    heroImage: "images/16.jpeg",
 
     /* Advanced: set heroBg to a full CSS background value to override
        heroImage entirely — e.g. a gradient or solid color:

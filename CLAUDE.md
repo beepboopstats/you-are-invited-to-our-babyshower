@@ -49,6 +49,21 @@ Two files:
 Data flows one way: **config.js → theme-applier + ENGINE → DOM.** Nothing writes
 back to CONFIG.
 
+There is one secondary page, **`cash_fund/index.html`** (opened by the
+"Cash Fund" registry button), which repeats the same architecture in
+miniature: all of its content lives in **`cash_fund_config.js`** at the repo
+root (`window.CASH_FUND_CONFIG` — page text plus a `methods` array of payment
+apps: `name`, `icon`, `handle`, `url`, `qr`, `note`), while its **theme is
+inherited** from `CONFIG.theme` — the page loads both `../config.js` and
+`../cash_fund_config.js` and runs the same theme-applier map, so the two pages
+always match. Optional QR code images live in the `cash_fund/` folder and are
+referenced by file name in each method's `qr` field. Every method field except
+`name` is optional; empty fields don't render (Zelle typically has a `handle`
+but no `url`). Its `robots: noindex` tag is static for the same privacy reason
+as the main page (it shows payment handles), and the "Copy" button falls back
+to `document.execCommand("copy")` because `navigator.clipboard` is unavailable
+over `file://`.
+
 `config.js` is loaded with a plain `<script src>` tag (NOT `fetch`), which is
 why the site still works from `file://` (double-click) as well as over http.
 
@@ -67,6 +82,9 @@ genuinely new *type* of feature (a new section, a new interactive behavior).
   automatically — no engine edit needed.
 - **New registry item / photo:** these are data-driven. Add an object to the
   `registries` or `photos` array in `config.js`. Do not touch markup or engine.
+- **Cash fund page (payment apps / handles / QR codes):** data-driven too — edit
+  the `methods` array in `cash_fund_config.js` (and drop QR images in
+  `cash_fund/`). Do not touch `cash_fund/index.html`.
 - **New button in the event section:** add markup inside `.event__actions`
   (reuse `.btn` + `.btn--solid` / `.btn--ghost`), add config fields, and add a
   small wiring block in the engine near the RSVP block (step "2b").
@@ -151,16 +169,39 @@ this workflow; the site is already static.
 ```
 config.js                     # ALL editable content + theme (window.CONFIG)
 index.html                    # markup, :root fallbacks, theme-applier, engine
+cash_fund_config.js           # editable content for the cash fund page (window.CASH_FUND_CONFIG)
+cash_fund/index.html          # cash fund page (same architecture; theme inherited from config.js)
+cash_fund/                    # also holds the user's QR code images (+ a README for them)
 images/                       # user photos (referenced from CONFIG.photos / theme)
+rsvp-apps-script.gs           # OPTIONAL Google Apps Script backend for RSVPs (user pastes into their own Sheet)
 .github/workflows/deploy.yml  # Pages deploy (no build)
 README.md                     # end-user customization guide
 CLAUDE.md                     # this file
 LICENSE                       # MIT
 ```
 
+## RSVP modes
+
+The RSVP button has three modes, chosen by config (engine step "2b"):
+- **`rsvpEndpoint` set** — the button opens an on-page `<dialog>` form (name +
+  number attending). Submit does a `fetch` POST (`mode:"no-cors"`,
+  `text/plain` body so there's no CORS preflight) to a Google Apps Script Web
+  App the user deploys against their **own** Google Sheet (see
+  `rsvp-apps-script.gs`). No backend lives in *this* repo; the site stays
+  static and `file://`-openable. `rsvpEndpoint` takes priority over `rsvpUrl`.
+- **`rsvpUrl` set** (endpoint empty) — classic link-out (web URL or `mailto:`).
+- **neither set** — the button is removed.
+This is an **opt-in** feature: the template ships with `rsvpEndpoint: ""`, so
+the default is still link-out and no personal data is collected unless the
+owner deliberately wires up their sheet.
+
 ## Out of scope / do not do
 
-- Don't add a backend, database, or server. RSVP is intentionally a link out.
-- Don't collect or store personal data in the page.
+- Don't add a backend, database, or server **to this repo**. The optional RSVP
+  form posts to a user-owned Google Apps Script endpoint (see "RSVP modes"),
+  which lives outside the repo — that's the only sanctioned data sink. Keep the
+  site itself static and `file://`-openable.
+- Don't collect or store personal data in the page beyond the opt-in RSVP form,
+  and never persist it in browser storage.
 - Don't reproduce copyrighted images or fonts without a proper license; the
   bundled fonts are Google Fonts (open license).

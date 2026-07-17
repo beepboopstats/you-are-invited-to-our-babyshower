@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- ============================================================
+     CASH FUND page. All content lives in ../cash_fund_config.js —
+     edit that file, not this one. The look is inherited from the
+     `theme` block in ../config.js, so the page always matches the
+     main site. QR code images go in this cash_fund/ folder.
+     ============================================================ -->
+<title>Cash Fund</title>
+<meta name="description" content="Ways to contribute to our baby fund." />
+
+<!-- Kept static (not config-driven) on purpose: this page shows payment
+     handles and must never be indexed, even if JS fails to run. -->
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💝</text></svg>" />
+
+<script src="../config.js"></script>
+<script src="../cash_fund_config.js"></script>
+
+<!-- Title + favicon from config, so the tab matches the main site. -->
+<script>
+(function () {
+  var C = window.CONFIG || {}, F = window.CASH_FUND_CONFIG || {};
+  var heading = F.heading || "Cash Fund";
+  document.title = C.title ? heading + " · " + C.title : heading;
+  var fav = (C.meta || {}).favicon;
+  if (fav) {
+    document.querySelector('link[rel="icon"]').setAttribute("href",
+      "data:image/svg+xml," + encodeURIComponent(
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>" + fav + "</text></svg>"));
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+
+<style>
+  /* ============================================================
+     THEME FALLBACKS — the real theme lives in ../config.js (the
+     `theme` block) and is applied by the script below. These values
+     only show for the split second before it runs, or if config.js
+     fails to load. To change the look, edit config.js, NOT here.
+     ============================================================ */
+  :root {
+    --bg:           #1d2b2a;
+    --bg-2:         #24403c;
+    --ink:          #f3ede1;
+    --ink-soft:     #c3c9be;
+    --accent:       #e8b04b;
+    --accent-2:     #7fb09b;
+    --line:         rgba(243,237,225,0.16);
+    --font-display: "Fraunces", Georgia, serif;
+    --font-body:    "Nunito Sans", system-ui, sans-serif;
+    --radius:       14px;
+    --maxw:         680px;
+    --gap:          clamp(1.75rem, 4vw, 3rem);
+  }
+
+  /* ---------- base (mirrors index.html) ---------- */
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: var(--accent-2); }
+
+  .wrap {
+    max-width: var(--maxw);
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 5vw, 2.5rem);
+  }
+  section { padding-block: var(--gap); }
+
+  .section-head {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(2rem, 6vw, 3rem);
+    text-align: center; margin: 0 0 0.4rem;
+  }
+  .section-sub {
+    text-align: center; color: var(--ink-soft);
+    margin: 0 auto 2rem; max-width: 44ch;
+  }
+
+  /* buttons (same recipe as index.html) */
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-body); font-weight: 700;
+    font-size: 0.95rem; letter-spacing: 0.01em;
+    text-decoration: none; cursor: pointer;
+    padding: 0.7rem 1.15rem;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .btn--solid { background: var(--accent); color: #241a06; }
+  .btn--solid:hover { background: #f0bd63; }
+  .btn--ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn--ghost:hover { border-color: var(--accent); }
+
+  /* ---------- payment method cards ---------- */
+  .methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 0.9rem;
+    align-items: start;
+  }
+  .method {
+    display: flex; flex-direction: column; gap: 0.6rem;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    text-align: center;
+  }
+  .method__name {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: 1.5rem; margin: 0;
+  }
+  .method__note { color: var(--ink-soft); font-size: 0.9rem; margin: 0; }
+  .method__qr {
+    width: min(180px, 70%);
+    margin-inline: auto;
+    border-radius: calc(var(--radius) / 2);
+    background: #fff;           /* QR codes need a light backing to scan */
+    padding: 0.5rem;
+  }
+  .method__handle {
+    display: flex; align-items: center; justify-content: center;
+    flex-wrap: wrap; gap: 0.5rem;
+  }
+  .method__handle code {
+    font-size: 0.95rem;
+    color: var(--accent);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: calc(var(--radius) / 2);
+    padding: 0.35rem 0.6rem;
+    overflow-wrap: anywhere;    /* long emails wrap instead of overflowing */
+  }
+  .method__copy { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+  .method__open { align-self: center; margin-top: 0.25rem; }
+
+  .thanks { text-align: center; color: var(--ink-soft); margin: 2rem auto 0; max-width: 44ch; }
+  .back { text-align: center; margin: 2.5rem 0 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+
+<!-- Apply the theme from ../config.js as CSS variables — the same map as
+     the main page, so both pages always match. Runs before the body paints. -->
+<script>
+(function () {
+  var t = (window.CONFIG && window.CONFIG.theme) || {};
+  var root = document.documentElement;
+  var map = {
+    bg: "--bg", bg2: "--bg-2", ink: "--ink", inkSoft: "--ink-soft",
+    accent: "--accent", accent2: "--accent-2", line: "--line",
+    fontDisplay: "--font-display", fontBody: "--font-body",
+    radius: "--radius", maxWidth: "--maxw", gap: "--gap",
+  };
+  Object.keys(map).forEach(function (key) {
+    if (t[key] != null && t[key] !== "") root.style.setProperty(map[key], t[key]);
+  });
+})();
+</script>
+</head>
+
+<body>
+  <!-- The page renders itself from CASH_FUND_CONFIG in ../cash_fund_config.js.
+       In normal use you never touch the markup below — edit that file only. -->
+
+  <section aria-label="Cash fund">
+    <div class="wrap">
+      <h1 class="section-head" data-bind="heading"></h1>
+      <p class="section-sub" data-bind="sub"></p>
+      <div class="methods" id="methods-grid"></div>
+      <p class="thanks" data-bind="thanks"></p>
+      <p class="back"><a id="back-link" href="../index.html"></a></p>
+    </div>
+  </section>
+
+<script>
+/* ================================================================
+   ENGINE — you shouldn't need to edit below this line.
+   Reads CASH_FUND_CONFIG (from ../cash_fund_config.js) and builds
+   one card per payment method.
+   ================================================================ */
+(function () {
+  const CONFIG = window.CASH_FUND_CONFIG || {};
+
+  // 1. Fill every element that has a data-bind attribute.
+  document.querySelectorAll("[data-bind]").forEach((el) => {
+    const key = el.getAttribute("data-bind");
+    if (CONFIG[key] != null && CONFIG[key] !== "") el.textContent = CONFIG[key];
+  });
+
+  // 2. Back link.
+  document.getElementById("back-link").textContent =
+    CONFIG.backLabel || "← Back to the invitation";
+
+  // Copy-to-clipboard with a fallback for file:// / older browsers,
+  // where navigator.clipboard is unavailable (it needs a secure context).
+  function copyText(text, done) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else fallback();
+    function fallback() {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); done(); } catch (e) { /* leave label as-is */ }
+      ta.remove();
+    }
+  }
+
+  // 3. One card per payment method. Every field except `name` is
+  //    optional — empty fields simply don't render.
+  const grid = document.getElementById("methods-grid");
+  const methods = (CONFIG.methods || []).filter((m) => m && m.name);
+
+  if (methods.length === 0) {
+    const p = document.createElement("p");
+    p.className = "section-sub";
+    p.textContent = "Payment details coming soon.";
+    grid.replaceWith(p);
+    return;
+  }
+
+  methods.forEach((m) => {
+    const card = document.createElement("article");
+    card.className = "method";
+
+    const name = document.createElement("h2");
+    name.className = "method__name";
+    name.textContent = (m.icon ? m.icon + " " : "") + m.name;
+    card.appendChild(name);
+
+    if (m.note) {
+      const note = document.createElement("p");
+      note.className = "method__note";
+      note.textContent = m.note;
+      card.appendChild(note);
+    }
+
+    if (m.qr) {
+      const img = document.createElement("img");
+      img.className = "method__qr";
+      img.src = m.qr;                       // file name in this cash_fund/ folder (or a full URL)
+      img.alt = m.name + " QR code";
+      img.loading = "lazy";
+      card.appendChild(img);
+    }
+
+    if (m.handle) {
+      const row = document.createElement("div");
+      row.className = "method__handle";
+      const code = document.createElement("code");
+      code.textContent = m.handle;
+      row.appendChild(code);
+
+      const copy = document.createElement("button");
+      copy.type = "button";
+      copy.className = "btn btn--ghost method__copy";
+      copy.textContent = "Copy";
+      copy.setAttribute("aria-label", "Copy " + m.name + " details");
+      copy.addEventListener("click", () => {
+        copyText(m.handle, () => {
+          copy.textContent = "Copied!";
+          setTimeout(() => { copy.textContent = "Copy"; }, 1500);
+        });
+      });
+      row.appendChild(copy);
+      card.appendChild(row);
+    }
+
+    if (m.url) {
+      const open = document.createElement("a");
+      open.className = "btn btn--solid method__open";
+      open.href = m.url;
+      open.target = "_blank";
+      open.rel = "noopener noreferrer";
+      open.textContent = "Open " + m.name + " ↗";
+      card.appendChild(open);
+    }
+
+    grid.appendChild(card);
+  });
+})();
+</script>
+</body>
+</html>
