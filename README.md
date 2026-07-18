@@ -136,7 +136,7 @@ looks when shared:
 
 ```js
 meta: {
-  siteUrl:       "https://www.beepboopstats.com/you-are-invited-to-our-babyshower/",
+  siteUrl:       "https://www.beepboopstats.com/babyshower/",
   shareImage:    "images/together.jpeg",   // preview thumbnail (ideal ~1200×630)
   shareImageAlt: "Alicia & Billu, parents-to-be",
   favicon:       "🍼",                       // tab icon (any single emoji)

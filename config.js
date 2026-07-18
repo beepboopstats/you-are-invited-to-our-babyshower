@@ -21,7 +21,7 @@ window.CONFIG = {
   meta: {
     // Canonical/base URL where the site is actually hosted. Used for the
     // canonical link, the social share URL, and to make the share image absolute.
-    siteUrl: "https://www.beepboopstats.com/you-are-invited-to-our-babyshower/",
+    siteUrl: "https://www.beepboopstats.com/babyshower/",
     // Image shown in social link previews (path or full URL; ideal ~1200x630).
     shareImage: "images/together.jpeg",
     shareImageAlt: "Alicia & Billu, parents-to-be",
