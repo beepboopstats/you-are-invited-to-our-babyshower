@@ -329,8 +329,13 @@
   }
   .slideshow__arrow:hover { border-color: var(--accent-2); }
   .slideshow__arrow:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
-  .slideshow__arrow--prev { left: 0.6rem; }
-  .slideshow__arrow--next { right: 0.6rem; }
+  .slideshow__arrow--prev { left: -3.25rem; }
+  .slideshow__arrow--next { right: -3.25rem; }
+  /* The arrows sit outside the frame and need side room; on narrow
+     screens hide them — swiping is the control there. */
+  @media (max-width: 767px) {
+    .slideshow__arrow { display: none; }
+  }
   .footer__note { color: var(--ink-soft); }
   .footer__sign {
     font-family: var(--font-display); font-style: italic;
@@ -636,9 +641,11 @@
   });
 
   // 4. Photo slideshow — one swipeable frame (scroll-snap does the swiping).
-  // CONFIG.photos is either { folder: "..." } — the engine probes for
-  // 01.*, 02.*, 03.*, … (jpeg/jpg/png/webp) and stops at the first gap —
-  // or the legacy array of { src, alt } objects, which still works.
+  // CONFIG.photos is either { folder: "..." } — the engine probes every
+  // number 01–99 (jpeg/jpg/png/webp; gaps in the numbering are fine) and
+  // shows the ones that exist in numeric order (= alphabetical for the
+  // zero-padded names) — or the legacy array of { src, alt } objects,
+  // which still works.
   const slideshow = document.getElementById("slideshow");
   const track = document.getElementById("slideshow-track");
   const slidePrev = document.getElementById("slideshow-prev");
@@ -680,21 +687,30 @@
   } else if (photosCfg && photosCfg.folder) {
     const folder = photosCfg.folder.replace(/\/?$/, "/");
     const EXTS = ["jpeg", "jpg", "png", "webp"];
-    // Resolves to the URL of photo #n (trying each extension) or null.
-    // Uses an Image load as the existence test because fetch() is blocked
-    // over file:// — this also pre-warms the browser cache for the slide.
-    const probe = (n, e = 0) => new Promise((resolve) => {
-      if (e >= EXTS.length) return resolve(null);
-      const url = folder + String(n).padStart(2, "0") + "." + EXTS[e];
-      const img = new Image();
-      img.onload = () => resolve(url);
-      img.onerror = () => probe(n, e + 1).then(resolve);
-      img.src = url;
-    });
+    const MAX = 99; // highest photo number probed for
+    // Resolves to the URL of photo #n (trying zero-padded and plain names
+    // with each extension) or null. Uses an Image load as the existence
+    // test because fetch() is blocked over file:// — this also pre-warms
+    // the browser cache for the slide.
+    const probe = (n) => {
+      const names = [...new Set([String(n).padStart(2, "0"), String(n)])];
+      const urls = names.flatMap((name) => EXTS.map((ext) => folder + name + "." + ext));
+      const attempt = (i) => new Promise((resolve) => {
+        if (i >= urls.length) return resolve(null);
+        const img = new Image();
+        img.onload = () => resolve(urls[i]);
+        img.onerror = () => attempt(i + 1).then(resolve);
+        img.src = urls[i];
+      });
+      return attempt(0);
+    };
     (async () => {
-      let n = 1;
-      for (let src; (src = await probe(n)); n++) addSlide(src, "Photo " + n);
-      finishSlideshow(n - 1);
+      // All numbers probe in parallel and missing ones just drop out, so
+      // the numbering may have gaps; order stays numeric.
+      const results = await Promise.all(Array.from({ length: MAX }, (_, i) => probe(i + 1)));
+      const found = results.filter(Boolean);
+      found.forEach((src, i) => addSlide(src, "Photo " + (i + 1)));
+      finishSlideshow(found.length);
     })();
   } else {
     slideshow.remove();

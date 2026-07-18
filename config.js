@@ -95,8 +95,9 @@ window.CONFIG = {
   footerHeading:  "Swipe through to see a tiny collection of our time together",
   // Photos: drop numbered images (01.jpeg, 02.jpeg, 03.jpeg, …) into the
   // folder below and they appear automatically in the slideshow — no list to
-  // maintain. Numbering must start at 01 with no gaps (jpeg/jpg/png/webp all
-  // work). Set folder to "" to hide the slideshow entirely.
+  // maintain. Numbers 01–99 are picked up in order and gaps are fine
+  // (jpeg/jpg/png/webp all work). Set folder to "" to hide the slideshow
+  // entirely.
   photos: { folder: "images/slideshow/" },
   footerNote:     "Can't wait to celebrate with you.",
   footerSignoff:  "— Alicia & Billu",
