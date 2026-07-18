@@ -85,6 +85,11 @@ genuinely new *type* of feature (a new section, a new interactive behavior).
 - **Cash fund page (payment apps / handles / QR codes):** data-driven too — edit
   the `methods` array in `cash_fund_config.js` (and drop QR images in
   `cash_fund/`). Do not touch `cash_fund/index.html`.
+- **Footer mini-game (runner art / obstacles / speed / jump):** edit
+  `game_config.js` (`window.GAME_CONFIG`; player + obstacles accept an emoji
+  or an image path). Every key is optional — the engine has built-in
+  defaults. The button label is content, so it lives in `config.js`
+  (`gameButton`; `""` removes the game). Don't touch the engine for tuning.
 - **New button in the event section:** add markup inside `.event__actions`
   (reuse `.btn` + `.btn--solid` / `.btn--ghost`), add config fields, and add a
   small wiring block in the engine near the RSVP block (step "2b").
@@ -169,6 +174,7 @@ this workflow; the site is already static.
 ```
 config.js                     # ALL editable content + theme (window.CONFIG)
 index.html                    # markup, :root fallbacks, theme-applier, engine
+game_config.js                # settings for the footer mini-game (window.GAME_CONFIG; optional)
 cash_fund_config.js           # editable content for the cash fund page (window.CASH_FUND_CONFIG)
 cash_fund/index.html          # cash fund page (same architecture; theme inherited from config.js)
 cash_fund/                    # also holds the user's QR code images (+ a README for them)

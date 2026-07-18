@@ -19,6 +19,9 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍼</text></svg>" />
 
 <script src="config.js"></script>
+<!-- Settings for the footer mini-game (player, obstacles, speed).
+     Optional — the game uses built-in defaults if this is missing. -->
+<script src="game_config.js"></script>
 
 <!-- Build SEO / social-share metadata from config.js (title, description,
      canonical, Open Graph, Twitter Card, favicon). Runs in <head> so a
@@ -341,6 +344,18 @@
     font-family: var(--font-display); font-style: italic;
     color: var(--accent); font-size: 1.4rem; margin-top: 0.5rem;
   }
+
+  /* ---------- ant runner mini-game ---------- */
+  .game { margin-top: 2.25rem; }
+  .game__stage { margin-top: 1.1rem; }
+  .game__canvas {
+    display: block; width: 100%; height: auto;
+    border: 1px solid var(--line); border-radius: var(--radius);
+    /* transparent by default; GAME_CONFIG.background can set a fill */
+    touch-action: manipulation; /* taps jump; don't let them double-tap zoom */
+  }
+  .game__canvas:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .game__hint { color: var(--ink-soft); font-size: 0.85rem; margin-top: 0.5rem; }
   .credit { color: var(--ink-soft); font-size: 0.78rem; opacity: 0.6; padding-bottom: 2rem; text-align: center; }
 
   @media (prefers-reduced-motion: reduce) {
@@ -466,6 +481,14 @@
       </div>
       <p class="footer__note" data-bind="footerNote"></p>
       <p class="footer__sign" data-bind="footerSignoff"></p>
+      <div class="game" id="game">
+        <button class="btn btn--ghost" id="game-btn" type="button" aria-expanded="false" aria-controls="game-stage"></button>
+        <div class="game__stage" id="game-stage" hidden>
+          <canvas class="game__canvas" id="game-canvas" width="640" height="180" tabindex="0"
+                  aria-label="Ant runner mini-game: press space, the up arrow, or tap to make the ant jump over obstacles."></canvas>
+          <p class="game__hint">Space, &uarr;, or tap to jump. Don&rsquo;t let the ant bump into anything!</p>
+        </div>
+      </div>
     </div>
   </footer>
 
@@ -776,6 +799,176 @@
   const btn = document.getElementById("calendar-btn");
   btn.href = URL.createObjectURL(blob);
   btn.setAttribute("download", calTitle.replace(/\s+/g, "-").toLowerCase() + ".ics");
+
+  // 6. "Play a game" — a dino-style runner starring an ant. The player art,
+  // obstacles, speed, and jump are configurable in game_config.js
+  // (window.GAME_CONFIG); every setting has a default so the file is
+  // optional. Colors come from the theme's CSS variables, and the best
+  // score lives in a plain variable — nothing is persisted
+  // (no-browser-storage rule). The animation only runs after the guest
+  // explicitly presses the button. Set CONFIG.gameButton to "" to remove
+  // the button and the game entirely.
+  const gameBox = document.getElementById("game");
+  const gameBtn = document.getElementById("game-btn");
+  const gameStage = document.getElementById("game-stage");
+  const gameCanvas = document.getElementById("game-canvas");
+  if (!CONFIG.gameButton) {
+    gameBox.remove();
+  } else {
+    gameBtn.textContent = CONFIG.gameButton;
+
+    const GC = window.GAME_CONFIG || {};
+    // Canvas fill from game_config.js; empty/missing = transparent.
+    if (GC.background) gameCanvas.style.background = GC.background;
+    const num = (v, d) => (Number.isFinite(+v) && +v > 0 ? +v : d);
+    const playerCfg = GC.player || {};
+    const speedCfg = GC.speed || {};
+
+    const ctx = gameCanvas.getContext("2d");
+    const W = gameCanvas.width, H = gameCanvas.height;
+    const GROUND = H - 28;                       // y of the ground line
+    const ANT_X = 60;                            // where the player runs
+    const ANT_W = num(playerCfg.size, 28);       // player height in px
+    const ANT_EMOJI = playerCfg.emoji || "🐜";
+    const FLIP = playerCfg.flip !== false;       // face right by default
+    const GRAVITY = 0.55, JUMP = num(GC.jump, 10.5);
+    const SPEED_START = num(speedCfg.start, 4.5);
+    const SPEED_MAX = num(speedCfg.max, 9);
+    const SPEED_RAMP = num(speedCfg.ramp, 0.0015);
+    const EMOJI_FONT = "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',serif";
+    const cssVar = (name) =>
+      getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+    // Player and obstacles can each be an emoji or an image path. Images
+    // load once up front; an obstacle image that fails to load is dropped
+    // from the pool so nothing invisible can be collided with.
+    const isImagePath = (s) => /\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i.test(s);
+    const loadSprite = (src) => { const i = new Image(); i.src = src; return i; };
+    const playerSprite = playerCfg.image ? loadSprite(playerCfg.image) : null;
+    let obstacleDefs = (Array.isArray(GC.obstacles) && GC.obstacles.length
+      ? GC.obstacles : ["🍼", "🧸", "🎁", "🧦"])
+      .map((o) => (isImagePath(o) ? { img: loadSprite(o) } : { emoji: o }));
+    obstacleDefs.forEach((d) => {
+      if (d.img) d.img.onerror = () => { obstacleDefs = obstacleDefs.filter((x) => x !== d); };
+    });
+    const spriteReady = (img) => img.complete && img.naturalWidth > 0;
+
+    let raf = null, over = false, best = 0;
+    let ant, vy, speed, frames, obstacles, untilNext;
+
+    const reset = () => {
+      ant = 0; vy = 0; speed = SPEED_START; frames = 0;
+      obstacles = []; untilNext = 70; over = false;
+    };
+
+    const step = () => {
+      frames++;
+      speed = Math.min(SPEED_MAX, speed + SPEED_RAMP); // ease the difficulty up
+      // ant physics (ant = height above the ground)
+      ant += vy; vy -= GRAVITY;
+      if (ant <= 0) { ant = 0; vy = 0; }
+      // obstacles march left; spawn a new one when the timer runs out
+      obstacles.forEach((o) => { o.x -= speed; });
+      obstacles = obstacles.filter((o) => o.x > -50);
+      if (--untilNext <= 0 && obstacleDefs.length) {
+        const def = obstacleDefs[Math.floor(Math.random() * obstacleDefs.length)];
+        obstacles.push({ x: W + 20, s: 26 + Math.random() * 8, ...def });
+        untilNext = Math.max(40, 60 + Math.random() * 70 - speed * 4);
+      }
+      // collision (boxes are padded in, emoji have transparent edges)
+      const aTop = GROUND - ant - 20;
+      for (const o of obstacles) {
+        const ow = o.s - 10, oTop = GROUND - (o.s - 8);
+        if (ANT_X + 4 < o.x + 4 + ow && o.x + 4 < ANT_X + 4 + (ANT_W - 6) &&
+            aTop < GROUND && oTop < GROUND - ant) {
+          over = true;
+          best = Math.max(best, score());
+          break;
+        }
+      }
+    };
+
+    const score = () => Math.floor(frames / 5);
+
+    const draw = () => {
+      ctx.clearRect(0, 0, W, H);
+      ctx.textBaseline = "bottom";
+      ctx.textAlign = "left";
+      // ground
+      ctx.strokeStyle = cssVar("--line");
+      ctx.beginPath();
+      ctx.moveTo(0, GROUND + 1.5);
+      ctx.lineTo(W, GROUND + 1.5);
+      ctx.stroke();
+      // the player (flipped, by default, to face its direction of travel)
+      ctx.save();
+      if (playerSprite && spriteReady(playerSprite)) {
+        const h = ANT_W;
+        const w = h * (playerSprite.naturalWidth / playerSprite.naturalHeight);
+        if (FLIP) { ctx.translate(ANT_X + w, 0); ctx.scale(-1, 1); ctx.drawImage(playerSprite, 0, GROUND - ant + 3 - h, w, h); }
+        else ctx.drawImage(playerSprite, ANT_X, GROUND - ant + 3 - h, w, h);
+      } else {
+        ctx.font = ANT_W + "px " + EMOJI_FONT;
+        if (FLIP) { ctx.translate(ANT_X + ANT_W, GROUND - ant + 3); ctx.scale(-1, 1); ctx.fillText(ANT_EMOJI, 0, 0); }
+        else ctx.fillText(ANT_EMOJI, ANT_X, GROUND - ant + 3);
+      }
+      ctx.restore();
+      // obstacles
+      obstacles.forEach((o) => {
+        if (o.img) {
+          if (!spriteReady(o.img)) return;
+          const h = o.s, w = h * (o.img.naturalWidth / o.img.naturalHeight);
+          ctx.drawImage(o.img, o.x, GROUND + 3 - h, w, h);
+        } else {
+          ctx.font = Math.round(o.s) + "px " + EMOJI_FONT;
+          ctx.fillText(o.emoji, o.x, GROUND + 3);
+        }
+      });
+      // score
+      ctx.font = "14px " + (cssVar("--font-body") || "sans-serif");
+      ctx.fillStyle = cssVar("--ink-soft");
+      ctx.textAlign = "right";
+      ctx.fillText("Score " + score() + (best ? "   Best " + best : ""), W - 14, 24);
+      if (over) {
+        ctx.fillStyle = cssVar("--ink");
+        ctx.textAlign = "center";
+        ctx.font = "bold 20px " + (cssVar("--font-body") || "sans-serif");
+        ctx.fillText("Ouch! Score: " + score(), W / 2, H / 2 - 8);
+        ctx.font = "14px " + (cssVar("--font-body") || "sans-serif");
+        ctx.fillText("Press space or tap to try again", W / 2, H / 2 + 16);
+      }
+    };
+
+    const loop = () => {
+      step();
+      draw();
+      raf = (!over && !gameStage.hidden) ? requestAnimationFrame(loop) : null;
+    };
+
+    const start = () => {
+      reset();
+      if (raf == null) raf = requestAnimationFrame(loop);
+    };
+
+    const onPress = (e) => {
+      e.preventDefault(); // keep space from scrolling / taps from zooming
+      gameCanvas.focus();
+      if (over) start();
+      else if (ant === 0) vy = JUMP;
+    };
+    gameCanvas.addEventListener("pointerdown", onPress);
+    gameCanvas.addEventListener("keydown", (e) => {
+      if (e.key === " " || e.key === "ArrowUp") onPress(e);
+    });
+
+    gameBtn.addEventListener("click", () => {
+      const opening = gameStage.hidden;
+      gameStage.hidden = !opening;
+      gameBtn.setAttribute("aria-expanded", String(opening));
+      if (opening) { start(); gameCanvas.focus(); }
+      else if (raf != null) { cancelAnimationFrame(raf); raf = null; }
+    });
+  }
 })();
 </script>
 </body>

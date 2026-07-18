@@ -101,6 +101,11 @@ window.CONFIG = {
   photos: { folder: "images/slideshow/" },
   footerNote:     "Can't wait to celebrate with you.",
   footerSignoff:  "— Alicia & Billu",
+  // "Play a game" button under the footer — opens a tiny ant-runner
+  // mini-game (jump over the baby gear!). Set to "" to remove it.
+  // The game itself (runner art, obstacles, speed) is tweaked in
+  // game_config.js.
+  gameButton:     "🐜 Play a game",
 
   /* ================================================================
      THEME — the entire look of the page. Change a color or font
