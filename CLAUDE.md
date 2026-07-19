@@ -85,11 +85,14 @@ genuinely new *type* of feature (a new section, a new interactive behavior).
 - **Cash fund page (payment apps / handles / QR codes):** data-driven too — edit
   the `methods` array in `cash_fund_config.js` (and drop QR images in
   `cash_fund/`). Do not touch `cash_fund/index.html`.
-- **Footer mini-game (runner art / obstacles / speed / jump):** edit
-  `game_config.js` (`window.GAME_CONFIG`; player + obstacles accept an emoji
-  or an image path). Every key is optional — the engine has built-in
-  defaults. The button label is content, so it lives in `config.js`
-  (`gameButton`; `""` removes the game). Don't touch the engine for tuning.
+- **Footer mini-game (runner art / obstacles / speed / jump / text color /
+  button label):** edit `game_config.js` (`window.GAME_CONFIG`; player +
+  obstacles accept an emoji or an image path; `textColor` colors the in-game
+  score/game-over text; `button.emoji` + `button.text` set the "Play a game"
+  button label). Every key is optional — the engine has built-in defaults.
+  `config.js` → `gameButton` remains the on/off switch (`""` removes the
+  game) and the fallback label when `button` is empty. Don't touch the
+  engine for tuning.
 - **New button in the event section:** add markup inside `.event__actions`
   (reuse `.btn` + `.btn--solid` / `.btn--ghost`), add config fields, and add a
   small wiring block in the engine near the RSVP block (step "2b").

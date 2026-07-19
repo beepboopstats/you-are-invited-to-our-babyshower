@@ -80,10 +80,10 @@ window.CONFIG = {
     	note: "Nursery & gear",      
     	url: "https://www.target.com/gift-registry/gift/alicia-and-billu" 
     	},
-    { name: "IKEA",      
-    	note: "Furniture picks",     
-    	url: "https://www.myregistry.com/baby-registry/biplabendu-das-and-alicia-formanack-phoenix-az/5505930" 
-    	},
+    // { name: "IKEA",      
+    //	note: "Furniture picks",     
+    //	url: "" 
+    //	},
     { name: "Cash Fund",
     	note: "Toward the big stuff",
     	// Opens the built-in cash fund page — edit cash_fund_config.js

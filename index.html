@@ -278,11 +278,15 @@
     margin: 0 auto 2rem; max-width: 40ch;
   }
   .registry {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* centers a leftover card when the count is odd */
     gap: 0.9rem;
   }
   .registry__item {
+    flex: 1 1 210px;
+    max-width: 340px; /* keeps an orphan card from stretching full-width */
+    box-sizing: border-box;
     display: flex; flex-direction: column; gap: 0.15rem;
     text-decoration: none; color: var(--ink);
     background: var(--bg-2);
@@ -815,9 +819,12 @@
   if (!CONFIG.gameButton) {
     gameBox.remove();
   } else {
-    gameBtn.textContent = CONFIG.gameButton;
-
     const GC = window.GAME_CONFIG || {};
+    // Button label: game_config.js button.emoji/text win; config.js
+    // gameButton stays the on/off switch and the fallback label.
+    const btnCfg = GC.button || {};
+    gameBtn.textContent =
+      [btnCfg.emoji, btnCfg.text].filter(Boolean).join(" ") || CONFIG.gameButton;
     // Canvas fill from game_config.js; empty/missing = transparent.
     if (GC.background) gameCanvas.style.background = GC.background;
     const num = (v, d) => (Number.isFinite(+v) && +v > 0 ? +v : d);
@@ -835,6 +842,7 @@
     const SPEED_START = num(speedCfg.start, 4.5);
     const SPEED_MAX = num(speedCfg.max, 9);
     const SPEED_RAMP = num(speedCfg.ramp, 0.0015);
+    const TEXT_COLOR = GC.textColor || ""; // "" = fall back to theme inks
     const EMOJI_FONT = "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',serif";
     const cssVar = (name) =>
       getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -926,11 +934,11 @@
       });
       // score
       ctx.font = "14px " + (cssVar("--font-body") || "sans-serif");
-      ctx.fillStyle = cssVar("--ink-soft");
+      ctx.fillStyle = TEXT_COLOR || cssVar("--ink-soft");
       ctx.textAlign = "right";
       ctx.fillText("Score " + score() + (best ? "   Best " + best : ""), W - 14, 24);
       if (over) {
-        ctx.fillStyle = cssVar("--ink");
+        ctx.fillStyle = TEXT_COLOR || cssVar("--ink");
         ctx.textAlign = "center";
         ctx.font = "bold 20px " + (cssVar("--font-body") || "sans-serif");
         ctx.fillText("Ouch! Score: " + score(), W / 2, H / 2 - 8);

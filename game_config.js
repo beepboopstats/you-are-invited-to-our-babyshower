@@ -2,14 +2,24 @@
    GAME CONFIG — the "Play a game" runner at the bottom of the page.
 
    Everything about the mini-game you might want to tweak lives here.
-   (The button's text lives with the rest of the page content, in
-   config.js → `gameButton`; set that to "" to remove the game.)
+   (config.js → `gameButton` is still the on/off switch: set it to ""
+   to remove the game entirely.)
 
    Every setting below is optional — delete a line (or this whole
    file) and the game falls back to its built-in defaults.
    ================================================================ */
 
 window.GAME_CONFIG = {
+
+  /* --- The "Play a game" button ------------------------------------
+     emoji : shown before the text (leave "" for no emoji).
+     text  : the button label.
+     If both are empty, the label falls back to config.js →
+     `gameButton`.                                                    */
+  button: {
+    emoji: "🐥",
+    text: "Play a game",
+  },
 
   /* --- The runner ------------------------------------------------
      emoji : any emoji works — try "🦖", "🐢", "👶", "🍼"…
@@ -20,9 +30,9 @@ window.GAME_CONFIG = {
      flip  : true mirrors the art so it faces right — most emoji face
              left. Set to false if your image already faces right.  */
   player: {
-    emoji: "",
-    image: "images/ant.png",
-    size: 80,
+    emoji: "🐣",
+    image: "",
+    size: 50,
     flip: false,
   },
 
@@ -39,8 +49,8 @@ window.GAME_CONFIG = {
              gets hard sooner. (4.5 / 9 / 0.0015 feel like the
              classic dino game.)                                     */
   speed: {
-    start: 5,
-    max: 12,
+    start: 2,
+    max: 10,
     ramp: 0.015,
   },
 
@@ -52,5 +62,11 @@ window.GAME_CONFIG = {
      Fill color behind the game — any CSS color works ("#fdf6ec",
      "rgb(29,43,42)", "peachpuff", …). Leave "" for transparent (the
      page shows through).                                            */
-  background: "white",
+  background: "",
+
+  /* --- The text color ----------------------------------------------
+     Color of the text drawn inside the game (the score and the
+     game-over message) — any CSS color works. Leave "" to use the
+     page theme's ink colors.                                         */
+  textColor: "",
 };
