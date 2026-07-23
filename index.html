@@ -252,7 +252,11 @@
   }
   .rsvp-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
   .rsvp-field > span { font-weight: 700; font-size: 0.9rem; }
-  .rsvp-field input {
+  .rsvp-field--check { flex-direction: row; align-items: center; gap: 0.5rem; }
+  .rsvp-field--check input { width: auto; }
+  .rsvp-field--check input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .rsvp-field input[disabled] { opacity: 0.5; cursor: default; }
+  .rsvp-field input:not([type="checkbox"]) {
     font-family: var(--font-body); font-size: 1rem; color: var(--ink);
     background: var(--bg);
     border: 1px solid var(--line);
@@ -449,6 +453,10 @@
           <input id="rsvp-name" name="name" type="text" autocomplete="name"
                  maxlength="80" required />
         </label>
+        <label class="rsvp-field rsvp-field--check">
+          <input id="rsvp-decline" name="decline" type="checkbox" />
+          <span>Sorry, I can't make it</span>
+        </label>
         <label class="rsvp-field">
           <span>Number attending</span>
           <input id="rsvp-count" name="count" type="number" inputmode="numeric"
@@ -574,11 +582,21 @@
     const msg = document.getElementById("rsvp-msg");
     const submit = document.getElementById("rsvp-submit");
     const cancel = document.getElementById("rsvp-cancel");
+    const decline = document.getElementById("rsvp-decline");
+    const count = document.getElementById("rsvp-count");
     const setMsg = (text, state) => {
       msg.textContent = text || "";
       if (state) msg.setAttribute("data-state", state);
       else msg.removeAttribute("data-state");
     };
+
+    // Checking "can't make it" disables + un-requires the count field so a
+    // decline submits cleanly and records "No" instead of a headcount.
+    const syncDecline = () => {
+      count.disabled = decline.checked;
+      count.required = !decline.checked;
+    };
+    decline.addEventListener("change", syncDecline);
 
     // The button is an <a>; without an href it drops out of the tab order,
     // so restore keyboard access with role=button + tabindex + key handling.
@@ -602,7 +620,8 @@
       e.preventDefault();
       const payload = {
         name: form.elements.name.value.trim(),
-        count: form.elements.count.value,
+        // "No" for a decline; otherwise the entered headcount.
+        count: decline.checked ? "No" : form.elements.count.value,
       };
       if (!payload.name) { setMsg("Please enter your name.", "error"); return; }
 
@@ -639,6 +658,7 @@
       submit.disabled = false;
       cancel.disabled = false;
       submit.textContent = "Confirm RSVP";
+      syncDecline(); // form.reset() clears the checkbox — re-enable the count field
     });
   } else if (rsvpUrl) {
     // Mode B — plain link.

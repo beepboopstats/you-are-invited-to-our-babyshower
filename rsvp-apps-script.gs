@@ -54,8 +54,16 @@ function doPost(e) {
     }
 
     var name = String(data.name || "").slice(0, 100);
-    var count = parseInt(data.count, 10);
-    if (isNaN(count) || count < 1) count = 1;
+
+    // A declining guest sends the literal string "No"; anyone attending sends a
+    // headcount. Store "No" as-is; otherwise coerce to a sane positive integer.
+    var count;
+    if (String(data.count).toLowerCase() === "no") {
+      count = "No";
+    } else {
+      count = parseInt(data.count, 10);
+      if (isNaN(count) || count < 1) count = 1;
+    }
 
     sheet.appendRow([new Date(), name, count]);
 
